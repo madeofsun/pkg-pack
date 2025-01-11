@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.common.json",
+  "include": ["src/"],
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "node16"
+  }
+}
