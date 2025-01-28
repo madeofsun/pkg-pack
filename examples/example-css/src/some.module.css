@@ -1,0 +1,5 @@
+.root {
+  composes: text from "./common.module.css";
+
+  color: red;
+}

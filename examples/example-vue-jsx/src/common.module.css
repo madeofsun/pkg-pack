@@ -1,0 +1,19 @@
+.text {
+  font-size: 14px;
+}
+
+.text-bold {
+  composes: text;
+
+  font-weight: 500;
+}
+
+.text-blue {
+  composes: text;
+
+  color: blue;
+}
+
+.text-bold-blue {
+  composes: text-bold text-blue;
+}

@@ -1,0 +1,32 @@
+{
+  "name": "@pkg-pack/plugin-css-modules",
+  "version": "0.0.0",
+  "description": "CSS Modules plugin for pkg-pack",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "author": "madeofsun (https://github.com/madeofsun)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/madeofsun/pkg-pack/packages/plugin-css-modules"
+  },
+  "scripts": {
+    "build": "pkg-pack build"
+  },
+  "dependencies": {
+    "lightningcss": "^1.28.2"
+  },
+  "peerDependencies": {
+    "pkg-pack": "^0.0.0 || ^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18",
+    "pkg-pack": "workspace:^"
+  }
+}

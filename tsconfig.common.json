@@ -2,14 +2,21 @@
   "compilerOptions": {
     "noEmit": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "types": [],
+    "skipLibCheck": false,
+    // "types": [],
     "resolveJsonModule": true,
     "moduleDetection": "force",
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true
-  }
+    "noImplicitOverride": true,
+
+    //
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "node16",
+    "types": ["node"]
+  },
+  "exclude": ["**/node_modules*/", "**/dist*/"]
 }

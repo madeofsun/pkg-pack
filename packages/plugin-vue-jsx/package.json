@@ -1,0 +1,34 @@
+{
+  "name": "@pkg-pack/plugin-vue-jsx",
+  "version": "0.0.0",
+  "description": "Vue JSX plugin for pkg-pack",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "author": "madeofsun (https://github.com/madeofsun)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/madeofsun/pkg-pack/packages/plugin-vue-jsx"
+  },
+  "scripts": {
+    "build": "pkg-pack build"
+  },
+  "dependencies": {
+    "@babel/core": "^7.0.0",
+    "@babel/plugin-transform-modules-commonjs": "^7.0.0",
+    "@vue/babel-plugin-jsx": "^1.0.0"
+  },
+  "peerDependencies": {
+    "pkg-pack": "^0.0.0 || ^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18",
+    "pkg-pack": "workspace:^"
+  }
+}

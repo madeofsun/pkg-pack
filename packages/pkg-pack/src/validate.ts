@@ -1,0 +1,4 @@
+/**
+ * TBD
+ */
+export function validate() {}
