@@ -29,6 +29,8 @@
   },
   "devDependencies": {
     "@types/node": "^18",
-    "pkg-pack": "workspace:^"
+    "@types/babel__core": "^7.20.5",
+    "pkg-pack": "workspace:^",
+    "pkg-pack-configs": "workspace:^"
   }
 }

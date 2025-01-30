@@ -1,5 +1,5 @@
 {
-  "name": "example-pkg",
+  "name": "example-json",
   "type": "module",
   "main": "./dist/default/index.js",
   "exports": {
@@ -20,6 +20,7 @@
     "@types/node": "^22",
     "pkg-pack": "workspace:^",
     "@pkg-pack/plugin-css-modules": "workspace:^",
-    "@pkg-pack/plugin-vue-jsx": "workspace:^"
+    "@pkg-pack/plugin-vue-jsx": "workspace:^",
+    "pkg-pack-configs": "workspace:^"
   }
 }

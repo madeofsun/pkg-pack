@@ -28,6 +28,7 @@
     "globby": "^14.0.2",
     "jiti": "^2.4.2",
     "typescript": "^5.7.3",
-    "es-toolkit": "^1.31.0"
+    "es-toolkit": "^1.31.0",
+    "pkg-pack-configs": "workspace:^"
   }
 }

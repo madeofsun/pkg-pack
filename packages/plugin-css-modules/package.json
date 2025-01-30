@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@types/node": "^18",
-    "pkg-pack": "workspace:^"
+    "pkg-pack": "workspace:^",
+    "pkg-pack-configs": "workspace:^"
   }
 }

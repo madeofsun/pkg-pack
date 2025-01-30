@@ -18,6 +18,7 @@
   "devDependencies": {
     "@types/node": "^22",
     "pkg-pack": "workspace:^",
-    "vue": "^3.5.13"
+    "vue": "^3.5.13",
+    "pkg-pack-configs": "workspace:^"
   }
 }

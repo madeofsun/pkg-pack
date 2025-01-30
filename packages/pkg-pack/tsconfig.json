@@ -1,3 +1,6 @@
 {
-  "extends": "../../tsconfig.common.json"
+  "extends": "pkg-pack-configs/tsconfig.packages.json",
+  "compilerOptions": {
+    "types": ["node"]
+  }
 }

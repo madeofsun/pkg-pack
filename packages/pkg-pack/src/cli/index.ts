@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // @ts-ignore
-import pkg from "../../../../some/package.json" with { type: 'json'};
+import pkg from "../../package.json";
 
 import { defineCommand, runMain } from "citty";
 import buildCmd from "./build.js";

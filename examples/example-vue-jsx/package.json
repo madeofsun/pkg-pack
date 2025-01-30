@@ -1,5 +1,5 @@
 {
-  "name": "example-css",
+  "name": "example-vue-jsx",
   "type": "module",
   "main": "./dist/default/index.js",
   "exports": {
@@ -19,6 +19,7 @@
     "vue": "^3.5.13",
     "pkg-pack": "workspace:^",
     "@pkg-pack/plugin-css-modules": "workspace:^",
-    "@pkg-pack/plugin-vue-jsx": "workspace:^"
+    "@pkg-pack/plugin-vue-jsx": "workspace:^",
+    "pkg-pack-configs": "workspace:^"
   }
 }
