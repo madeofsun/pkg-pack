@@ -1,5 +1,5 @@
 {
-  "extends": "pkg-pack-configs/tsconfig.base.json",
+  "extends": "@pkg-pack/configs/tsconfig-base.json",
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,

@@ -3,5 +3,6 @@ import { cssModulesPlugin } from "@pkg-pack/plugin-css-modules";
 
 export default defineConfig({
   preset: cjsCompatPreset(),
+  exportConds: ["default", "browser"],
   plugins: [cssModulesPlugin()],
 });

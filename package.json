@@ -1,5 +1,5 @@
 {
-  "name": "pkg-pack-project",
+  "name": "@pkg-pack/project",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,8 +13,11 @@
   "author": "madeofsun (https://github.com/madeofsun)",
   "license": "MIT",
   "devDependencies": {
-    "turbo": "^2.3.4",
-    "typescript": "^5.7.3"
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.3",
+    "@types/node": "^18",
+    "@pkg-pack/configs": "workspace:^",
+    "@pkg-pack/scripts": "workspace:^"
   },
   "scripts": {
     "dev": "turbo watch build --filter=\"./packages/*\"",

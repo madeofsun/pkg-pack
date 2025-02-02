@@ -50,7 +50,7 @@ export function cssModulesPlugin(options?: {
             if (ref.type === "local") {
               expression += ` + " ${ref.name}"`;
             } else if (ref.type === "global") {
-              expression += ` + "${ref.name}"`;
+              expression += ` + " ${ref.name}"`;
             } else if (ref.type === "dependency") {
               const importIndex = addImport(ref.specifier);
               expression += ` + " " + styles_${importIndex}["${ref.name}"]`;

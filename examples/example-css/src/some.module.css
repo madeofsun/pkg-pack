@@ -3,3 +3,19 @@
 
   color: red;
 }
+
+.another1 {
+  composes: text from global;
+}
+
+.blue {
+  color: blue;
+}
+
+.another2 {
+  composes: blue;
+}
+
+.another3 {
+  composes: text from ./common.module.css;
+}
