@@ -1,4 +1,4 @@
-import { findMemberExpressions } from "../helpers/ast.js";
+import { findMemberExpressions, getNextName } from "../helpers/ast.js";
 import { editText, type TextChange } from "../helpers/edit-text.js";
 import { randString } from "../helpers/rand-string.js";
 import type { LoadedFile, Plugin } from "../types/index.js";
@@ -24,29 +24,143 @@ export function fixImportMetaPlugin(options?: {
 
           const changes: TextChange[] = [];
 
-          const topSymbols = typeChecker.getSymbolsInScope(
+          const nodeUrlName = getNextName(
+            "node_url",
+            typeChecker,
             sourceFile,
-            ts.SymbolFlags.Variable
+            ts.SymbolFlags.Variable,
+            false
+          );
+          const nodePathName = getNextName(
+            "node_path",
+            typeChecker,
+            sourceFile,
+            ts.SymbolFlags.Variable,
+            false
           );
 
-          const topSymbolsSet = new Set(
-            topSymbols.map((sym) => sym.escapedName.toString())
-          );
-          let helpers = getHelpers(randString(3));
-          while (
-            Object.values(helpers).some((value) => topSymbolsSet.has(value.id))
-          ) {
-            helpers = getHelpers(randString(3));
-          }
+          const helpers = {
+            dirname: {
+              topLevel: () => "const __dirname = import",
+              id: "__dirname",
+            },
+            nodeUrl: {
+              topLevel: (sourceFormat: "esm" | "cjs") =>
+                sourceFormat === "esm"
+                  ? `import ${nodeUrlName} from "node:url";\n`
+                  : `import ${nodeUrlName} = require("node:url")\n`,
+              id: nodeUrlName,
+            },
+            nodePath: {
+              topLevel: (sourceFormat: "esm" | "cjs") =>
+                sourceFormat === "esm"
+                  ? `import ${nodePathName} from "node:path";\n`
+                  : `import ${nodePathName} = require("node:path")\n`,
+              id: nodePathName,
+            },
+          };
 
           if (sourceFile.impliedNodeFormat === ts.ModuleKind.ESNext) {
+            const sourceFormat = "esm";
+
+            // rename all identifiers that conflicts with the global ones
+            for (const id of ["require", "__dirname", "__filename"] as const) {
+              let importId = 0;
+              for (const { span, container } of findMemberExpressions(
+                sourceFile,
+                [id]
+              )) {
+                if (
+                  typeChecker.resolveName(
+                    id,
+                    container,
+                    ts.SymbolFlags.Variable,
+                    true
+                  )
+                ) {
+                  const newName = getNextName(
+                    id,
+                    typeChecker,
+                    container,
+                    ts.SymbolFlags.Variable,
+                    false
+                  );
+                  changes.push({
+                    span,
+                    newText: newName,
+                  });
+                } else {
+                  if (id === "require") {
+                    if (
+                      ts.isIdentifier(container) &&
+                      ts.isCallExpression(container.parent) &&
+                      container.parent.arguments[0] &&
+                      ts.isStringLiteral(container.parent.arguments[0])
+                    ) {
+                      const moduleSpec = container.parent.arguments[0].text;
+                      const name = getNextName(
+                        `required_${importId}`,
+                        typeChecker,
+                        container,
+                        ts.SymbolFlags.Variable,
+                        true
+                      );
+                      topLevel.add(`import ${name} from "${moduleSpec}";\n`);
+                      changes.push({
+                        span: {
+                          start: container.parent.getStart(),
+                          length: container.parent.getWidth(),
+                        },
+                        newText: name,
+                      });
+                      console.warn(
+                        `"require('${moduleSpec}') was replaced with static import.`
+                      );
+                    } else if (
+                      ts.isPropertyAccessExpression(container.parent) &&
+                      ts.isIdentifier(container.parent.name) &&
+                      container.parent.name.getText() === "resolve" &&
+                      ts.isCallExpression(container.parent.parent)
+                    ) {
+                      changes.push({
+                        span: {
+                          start: container.parent.getStart(),
+                          length: container.parent.getWidth(),
+                        },
+                        newText: `import.meta.resolve`,
+                      });
+                    } else {
+                      throw new Error(
+                        `${sourceFile.fileName}: require is not supported in ESM context`
+                      );
+                    }
+                  } else if (id === "__dirname") {
+                    topLevel.add(helpers.nodePath.topLevel(sourceFormat));
+                    topLevel.add(helpers.nodeUrl.topLevel(sourceFormat));
+
+                    changes.push({
+                      span,
+                      newText: `${helpers.nodePath.id}.dirname(${helpers.nodeUrl.id}.fileURLToPath(import.meta.url))`,
+                    });
+                  } else if (id === "__filename") {
+                    topLevel.add(helpers.nodeUrl.topLevel(sourceFormat));
+
+                    changes.push({
+                      span,
+                      newText: `${helpers.nodeUrl.id}.fileURLToPath(import.meta.url)`,
+                    });
+                  }
+                }
+              }
+            }
+
             for (const { span } of findMemberExpressions(sourceFile, [
               "import",
               "meta",
               "dirname",
             ])) {
-              topLevel.add(helpers.nodePath.topLevel);
-              topLevel.add(helpers.nodeUrl.topLevel);
+              topLevel.add(helpers.nodePath.topLevel(sourceFormat));
+              topLevel.add(helpers.nodeUrl.topLevel(sourceFormat));
 
               changes.push({
                 span,
@@ -58,24 +172,55 @@ export function fixImportMetaPlugin(options?: {
               "meta",
               "filename",
             ])) {
-              topLevel.add(helpers.nodeUrl.topLevel);
+              topLevel.add(helpers.nodeUrl.topLevel(sourceFormat));
 
               changes.push({
                 span,
-                newText: `${helpers.nodeUrl.id}.pathToFileURL(__filename)`,
+                newText: `${helpers.nodeUrl.id}.fileURLToPath(import.meta.url)`,
               });
             }
           } else if (sourceFile.impliedNodeFormat === ts.ModuleKind.CommonJS) {
+            // rename all identifiers that conflicts with the global ones
+            for (const id of ["require", "__dirname", "__filename"]) {
+              for (const { span, container } of findMemberExpressions(
+                sourceFile,
+                [id]
+              )) {
+                if (
+                  typeChecker.resolveName(
+                    id,
+                    container,
+                    ts.SymbolFlags.Variable,
+                    true
+                  )
+                ) {
+                  const newName = getNextName(
+                    id,
+                    typeChecker,
+                    container,
+                    ts.SymbolFlags.Variable,
+                    false
+                  );
+                  changes.push({
+                    span,
+                    newText: newName,
+                  });
+                }
+              }
+            }
+
+            const sourceFormat = sourceFile.fileName.match(/\.c?(t|j)s$/)
+              ? "cjs"
+              : "esm";
+
             for (const { span } of findMemberExpressions(sourceFile, [
               "import",
               "meta",
               "dirname",
             ])) {
-              topLevel.add(helpers.globalThis.topLevel);
-
               changes.push({
                 span,
-                newText: `${helpers.globalThis.id}.__dirname`,
+                newText: `__dirname`,
               });
             }
             for (const { span } of findMemberExpressions(sourceFile, [
@@ -83,11 +228,9 @@ export function fixImportMetaPlugin(options?: {
               "meta",
               "filename",
             ])) {
-              topLevel.add(helpers.globalThis.topLevel);
-
               changes.push({
                 span,
-                newText: `${helpers.globalThis.id}.__filename`,
+                newText: `__filename`,
               });
             }
             for (const { span } of findMemberExpressions(sourceFile, [
@@ -95,11 +238,11 @@ export function fixImportMetaPlugin(options?: {
               "meta",
               "url",
             ])) {
-              topLevel.add(helpers.nodeUrl.topLevel);
+              topLevel.add(helpers.nodeUrl.topLevel(sourceFormat));
 
               changes.push({
                 span,
-                newText: `${helpers.nodeUrl.id}.pathToFileURL(__filename)`,
+                newText: `${helpers.nodeUrl.id}.pathToFileURL(__filename).href`,
               });
             }
             for (const { span } of findMemberExpressions(sourceFile, [
@@ -107,11 +250,9 @@ export function fixImportMetaPlugin(options?: {
               "meta",
               "resolve",
             ])) {
-              topLevel.add(helpers.globalThis.topLevel);
-
               changes.push({
                 span,
-                newText: `${helpers.globalThis.id}.require.resolve`,
+                newText: `require.resolve`,
               });
             }
           }
@@ -140,10 +281,6 @@ export function fixImportMetaPlugin(options?: {
 
 function getHelpers(suffix: string) {
   return {
-    globalThis: {
-      topLevel: `const globalThis_${suffix} = globalThis;\n`,
-      id: `globalThis_${suffix}`,
-    },
     nodeUrl: {
       topLevel: `import node_url_${suffix} from "node:url";\n`,
       id: `node_url_${suffix}`,

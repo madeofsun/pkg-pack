@@ -142,12 +142,9 @@ function getMemberList(node: ts.Node): null | string[] {
   }
 
   if (ts.isIdentifier(node)) {
-    return [node.escapedText.toString()];
+    return [node.getText()];
   } else if (ts.isPropertyAccessExpression(node)) {
-    return [
-      ...(getMemberList(node.expression) ?? []),
-      node.name.escapedText.toString(),
-    ];
+    return [...(getMemberList(node.expression) ?? []), node.name.getText()];
   } else if (ts.isElementAccessExpression(node)) {
     if (
       ts.isStringLiteral(node.argumentExpression) ||
@@ -184,4 +181,25 @@ function isEqualPath(a: string[], b: string[]) {
     if (a[i] !== b[i]) return false;
   }
   return true;
+}
+
+export function getNextName(
+  name: string,
+  typeChecker: ts.TypeChecker,
+  location: ts.Node,
+  symbolFlags: ts.SymbolFlags,
+  excludeGlobals: boolean
+): string {
+  let suffix = 1;
+  while (
+    typeChecker.resolveName(
+      `${name}_${suffix}`,
+      location,
+      symbolFlags,
+      excludeGlobals
+    )
+  ) {
+    suffix += 1;
+  }
+  return `${name}_${suffix}`;
 }

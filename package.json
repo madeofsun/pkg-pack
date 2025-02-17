@@ -16,8 +16,7 @@
     "turbo": "^2.4.0",
     "typescript": "^5.7.3",
     "@types/node": "^18",
-    "@pkg-pack/configs": "workspace:^",
-    "@pkg-pack/scripts": "workspace:^"
+    "@pkg-pack/configs": "workspace:^"
   },
   "scripts": {
     "dev": "turbo watch build --filter=\"./packages/*\"",
