@@ -1,6 +1,5 @@
 import { findMemberExpressions, getNextName } from "../helpers/ast.js";
 import { editText, type TextChange } from "../helpers/edit-text.js";
-import { randString } from "../helpers/rand-string.js";
 import type { LoadedFile, Plugin } from "../types/index.js";
 import ts from "typescript";
 
@@ -114,7 +113,7 @@ export function fixImportMetaPlugin(options?: {
                         newText: name,
                       });
                       console.warn(
-                        `"require('${moduleSpec}') was replaced with static import.`
+                        `${fileName}: require('${moduleSpec}') was replaced with static import`
                       );
                     } else if (
                       ts.isPropertyAccessExpression(container.parent) &&
@@ -131,7 +130,7 @@ export function fixImportMetaPlugin(options?: {
                       });
                     } else {
                       throw new Error(
-                        `${sourceFile.fileName}: require is not supported in ESM context`
+                        `${fileName}: require is not supported in ESM context`
                       );
                     }
                   } else if (id === "__dirname") {

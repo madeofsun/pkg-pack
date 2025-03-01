@@ -1,1 +1,1 @@
-export { some } from "./import-meta";
+export { some } from "./import-meta-ts";
