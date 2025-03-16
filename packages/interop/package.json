@@ -1,0 +1,28 @@
+{
+  "name": "@pkg-pack/interop",
+  "version": "0.0.0",
+  "description": "ESM/CJS interop utilities",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "module": "./module/index.js",
+  "exports": {
+    ".": {
+      "module": "./module/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "author": "madeofsun (https://github.com/madeofsun)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/madeofsun/pkg-pack/packages/pkg-pack"
+  },
+  "scripts": {
+    "build": "pkg-pack build"
+  },
+  "devDependencies": {
+    "pkg-pack": "workspace:*"
+  }
+}

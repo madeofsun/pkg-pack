@@ -15,7 +15,7 @@ export function loadJsonPlugin(options?: {
       order: options?.loadOrder ?? 0,
       async fn(file, { target }) {
         if (
-          !target.ts.compilerOptions.resolveJsonModule ||
+          !target.compilerOptions.resolveJsonModule ||
           !file.srcPath.endsWith(".json")
         ) {
           return;

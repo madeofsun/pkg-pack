@@ -277,16 +277,3 @@ export function fixImportMetaPlugin(options?: {
     },
   };
 }
-
-function getHelpers(suffix: string) {
-  return {
-    nodeUrl: {
-      topLevel: `import node_url_${suffix} from "node:url";\n`,
-      id: `node_url_${suffix}`,
-    },
-    nodePath: {
-      topLevel: `import node_path_${suffix} from "node:path";\n`,
-      id: `node_path_${suffix}`,
-    },
-  };
-}

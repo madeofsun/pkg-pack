@@ -25,8 +25,11 @@ export async function compile(
     _fileVersions.set(fileName, getFileVersion(fileName) + 1);
   };
 
-  const pkgJsonPath = path.resolve(srcDir, "package.json");
-  if (!loadedFiles.has(pkgJsonPath)) {
+  // Add synthetic package.json in order to force proper emit
+  let pkgJsonPath: string | null = path.resolve(srcDir, "package.json");
+  if (loadedFiles.has(pkgJsonPath)) {
+    pkgJsonPath = null;
+  } else {
     loadedFiles.set(pkgJsonPath, {
       kind: "source",
       srcPath: pkgJsonPath,
@@ -83,7 +86,7 @@ export async function compile(
     {
       noEmitOnError: true,
     },
-    target.ts.compilerOptions,
+    target.compilerOptions,
     {
       noEmit: false,
       incremental: true,
@@ -199,6 +202,10 @@ export async function compile(
   const outputFiles = new Map<string, OutputFile>();
 
   for (const fileName of languageService.getProgram()!.getRootFileNames()) {
+    // ignore synthetic package.json
+    if (pkgJsonPath && fileName === pkgJsonPath) {
+      continue;
+    }
     const res = languageService.getEmitOutput(fileName);
     if (res.diagnostics.length > 0) {
       errors.push(...res.diagnostics);
@@ -247,35 +254,4 @@ export async function compile(
   }
 
   return outputFiles;
-}
-
-// based on https://github.com/microsoft/TypeScript/blob/main/src/compiler/utilities.ts#L9834C1-L9854C2
-// extra support for ".jsx.(c|m)(j\t)s"
-export function getScriptKindFromFileName(fileName: string): ts.ScriptKind {
-  if (fileName.endsWith(".jsx.mjs") || fileName.endsWith(".jsx.cjs")) {
-    return ts.ScriptKind.JSX;
-  }
-  if (fileName.endsWith(".jsx.mts") || fileName.endsWith(".jsx.cts")) {
-    return ts.ScriptKind.TSX;
-  }
-
-  const ext = fileName.slice(fileName.lastIndexOf("."));
-  switch (ext.toLowerCase()) {
-    case ".js":
-    case ".cjs":
-    case ".mjs":
-      return ts.ScriptKind.JS;
-    case ".jsx":
-      return ts.ScriptKind.JSX;
-    case ".ts":
-    case ".ctx":
-    case ".mts":
-      return ts.ScriptKind.TS;
-    case ".tsx":
-      return ts.ScriptKind.TSX;
-    case "json":
-      return ts.ScriptKind.JSON;
-    default:
-      return ts.ScriptKind.Unknown;
-  }
 }

@@ -20,13 +20,17 @@
     "url": "git+https://github.com/madeofsun/pkg-pack/packages/pkg-pack"
   },
   "scripts": {
-    "build": "jiti ./src/cli/index.ts build"
+    "build": "jiti ./src/cli/index.ts build",
+    "types": "npx tsc"
   },
   "dependencies": {
     "citty": "^0.1.6",
-    "globby": "^14.0.2",
-    "jiti": "^2.4.2",
-    "typescript": "^5.7.3",
-    "es-toolkit": "^1.31.0"
+    "jiti": "^2.4.2"
+  },
+  "devDependencies": {
+    "typescript": "~5.5.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.5.0"
   }
 }

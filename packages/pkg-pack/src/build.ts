@@ -1,72 +1,68 @@
-import { globby } from "globby";
 import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import { compile } from "./compile.js";
-import { esmPurePreset } from "./presets/presets.js";
+import { cjsCompatPreset, esmPurePreset } from "./presets/presets.js";
 import type {
   AfterEmitHook,
   AfterLoadHook,
   BeforeEmitHook,
+  ConfigHook,
   InputFile,
   LoadedFile,
   LoadHook,
   LoadHookOptions,
   OutputFile,
   Plugin,
+  PluginHook,
   ResolvedConfig,
+  ResolvedTargetsHook,
   UserConfig,
 } from "./types/index.js";
 
-const defaultPreset = esmPurePreset();
-
 export async function build(config: UserConfig) {
-  config.preset ??= defaultPreset;
-
-  await config.preset.config?.(config);
-
-  const tsConfigPath = ts.findConfigFile(".", ts.sys.fileExists);
-  if (!tsConfigPath) {
-    throw new Error("Could not find tsconfig");
+  let preset = config.preset ?? (await resolveDefaultPreset());
+  if (preset === "esm-pure") {
+    preset = esmPurePreset();
+  } else if (preset === "cjs-compat") {
+    preset = cjsCompatPreset();
   }
+
+  await preset.config?.(config);
+  const configHook = createConfigHook(config.plugins ?? []);
+  await configHook(config);
+
   const resolvedConfig: ResolvedConfig = {
-    preset: config.preset,
+    preset,
     plugins: config.plugins ?? [],
-    exportConds: config.exportConds ?? ["default"],
     srcDir: config.srcDir ?? path.resolve("src"),
     files: config.files ?? [],
-    include: config.include ?? ["**"],
+    include: config.include ?? ["**/*"],
     exclude: config.exclude ?? [
       "**/*.(test|spec).(js|jsx|cjs|mjs|ts|tsx|cts|mts)",
       "**/__tests__/**/*",
       "**/__fixtures__/**/*",
       "**/__mocks__/**/*",
     ],
-    ts: {
-      configPath: tsConfigPath,
-      compilerOptions: resolveTsOptions(tsConfigPath),
-    },
+    tsconfig: "tsconfig.json",
   };
 
-  const { preset, plugins, exportConds, srcDir, files, include, exclude } =
-    resolvedConfig;
+  const { plugins, srcDir, files, include, exclude } = resolvedConfig;
 
-  if (!exportConds.includes("default")) {
-    throw new Error(`The "default" export condition must be always provided`);
-  }
+  const targets = await preset.resolveTargets({
+    config: resolvedConfig,
+    compilerOptions: resolveTsOptions(resolvedConfig.tsconfig),
+  });
+
+  const resolvedTargetsHook = createResolveTargetsHook(resolvedConfig.plugins);
+  await resolvedTargetsHook(targets, resolvedConfig);
 
   const fileNames = files?.length
     ? files
-    : await globby(include, {
-        cwd: srcDir,
-        ignore: exclude,
-        onlyFiles: true,
-        dot: true,
-        absolute: false,
-      });
+    : ts.sys.readDirectory(path.resolve(srcDir), undefined, exclude, include);
 
   const inputFiles: InputFile[] = fileNames.map((fileName) => {
-    const srcPath = path.resolve(srcDir, fileName);
+    const srcPath = path.resolve(fileName);
     const read = () => fs.promises.readFile(srcPath);
     return {
       srcPath,
@@ -74,25 +70,23 @@ export async function build(config: UserConfig) {
     };
   });
 
-  for (const exportCond of exportConds) {
-    const target = await preset.resolveTarget(exportCond, resolvedConfig);
-
-    const loadFile = createLoadFile(plugins);
-    const afterLoad = createAfterLoad(plugins);
-    const beforeEmit = createBeforeEmit(plugins);
-    const afterEmit = createAfterEmit(plugins);
+  for (const target of targets) {
+    const loadFileHook = createLoadFileHook(plugins);
+    const afterLoadHook = createAfterLoadHook(plugins);
+    const beforeEmitHook = createBeforeEmitHook(plugins);
+    const afterEmitHook = createAfterEmitHook(plugins);
 
     const loadedFiles: Map<string, LoadedFile> = new Map();
 
     const loadFileContext: LoadHookOptions = {
       srcDir,
       target,
-      loadFile,
+      loadFile: loadFileHook,
       loadContext: {},
     };
 
     for (const file of inputFiles) {
-      const res = await loadFile(file, loadFileContext);
+      const res = await loadFileHook(file, loadFileContext);
       if (!res) continue;
       if (Array.isArray(res)) {
         for (const loadedFile of res) {
@@ -103,9 +97,14 @@ export async function build(config: UserConfig) {
       }
     }
 
-    await afterLoad(loadedFiles, { srcDir, target });
+    await afterLoadHook(loadedFiles, { srcDir, target });
 
-    const outputFiles = await compile(srcDir, loadedFiles, beforeEmit, target);
+    const outputFiles = await compile(
+      srcDir,
+      loadedFiles,
+      beforeEmitHook,
+      target
+    );
 
     if ("errors" in outputFiles) {
       for (const error of outputFiles.errors) {
@@ -119,7 +118,7 @@ export async function build(config: UserConfig) {
       throw new Error("Could not compile");
     }
 
-    await afterEmit(outputFiles, { srcDir, target });
+    await afterEmitHook(outputFiles, { srcDir, target });
 
     writeFiles(outputFiles, target.outDir);
   }
@@ -149,6 +148,19 @@ async function writeFiles(
       dst,
       "buffer" in file ? file.buffer : file.text
     );
+  }
+}
+
+async function resolveDefaultPreset() {
+  try {
+    const pkgContent = await fs.promises.readFile("package.json", "utf-8");
+    const { type } = JSON.parse(pkgContent);
+    if (type === "module") {
+      return "esm-pure";
+    }
+    return "cjs-compat";
+  } catch (error) {
+    throw new Error("Could not read package.json", { cause: error });
   }
 }
 
@@ -183,21 +195,57 @@ function resolveTsOptions(tsconfig: string) {
   return parsedCommandLine.options;
 }
 
-function createLoadFile(plugins: Plugin[]): LoadHook {
-  const loadPlugins = plugins
-    .filter((p) => "load" in p)
+function getHookFunctions<K extends Exclude<keyof Plugin, "name">>(
+  plugins: Plugin[],
+  hookName: K
+) {
+  return plugins
+    .filter((p) => hookName in p)
     .sort(
       (p1, p2) =>
-        (typeof p1.load === "object" ? p1.load.order : 0) -
-        (typeof p2.load === "object" ? p2.load.order : 0)
-    );
+        (typeof p1[hookName] === "object" ? p1[hookName].order : 0) -
+        (typeof p2[hookName] === "object" ? p2[hookName].order : 0)
+    )
+    .map((plugin) => {
+      const hook = plugin[hookName];
+      return typeof hook === "function"
+        ? hook
+        : typeof hook === "object"
+        ? hook.fn
+        : (null as never);
+    }) as Exclude<Plugin[K], undefined> extends PluginHook<infer X> ? X[] : [];
+}
+
+function createConfigHook(plugins: Plugin[]) {
+  const fns = getHookFunctions(plugins, "config");
+
+  const runConfig: ConfigHook = async (config) => {
+    for (const fn of fns) {
+      await fn(config);
+    }
+  };
+
+  return runConfig;
+}
+
+function createResolveTargetsHook(plugins: Plugin[]) {
+  const fns = getHookFunctions(plugins, "resolvedTargets");
+
+  const runResolveTargets: ResolvedTargetsHook = async (targets, config) => {
+    for (const fn of fns) {
+      await fn(targets, config);
+    }
+  };
+
+  return runResolveTargets;
+}
+
+function createLoadFileHook(plugins: Plugin[]): LoadHook {
+  const fns = getHookFunctions(plugins, "load");
 
   const runLoad: LoadHook = async (input, options) => {
-    for (const plugin of loadPlugins) {
-      const outputs =
-        typeof plugin.load === "function"
-          ? await plugin.load(input, options)
-          : await plugin.load?.fn?.(input, options);
+    for (const fn of fns) {
+      const outputs = await fn(input, options);
       if (outputs) {
         return outputs;
       }
@@ -208,7 +256,7 @@ function createLoadFile(plugins: Plugin[]): LoadHook {
   return runLoad;
 }
 
-function createAfterLoad(plugins: Plugin[]): AfterLoadHook {
+function createAfterLoadHook(plugins: Plugin[]): AfterLoadHook {
   plugins = plugins
     .filter((p) => "afterLoad" in p)
     .sort(
@@ -230,7 +278,7 @@ function createAfterLoad(plugins: Plugin[]): AfterLoadHook {
   return runBeforeCompile;
 }
 
-function createBeforeEmit(plugins: Plugin[]): BeforeEmitHook {
+function createBeforeEmitHook(plugins: Plugin[]): BeforeEmitHook {
   plugins = plugins
     .filter((p) => "beforeEmit" in p)
     .sort(
@@ -252,7 +300,7 @@ function createBeforeEmit(plugins: Plugin[]): BeforeEmitHook {
   return runBeforeEmit;
 }
 
-function createAfterEmit(plugins: Plugin[]): AfterEmitHook {
+function createAfterEmitHook(plugins: Plugin[]): AfterEmitHook {
   plugins = plugins
     .filter((p) => "afterEmit" in p)
     .sort(

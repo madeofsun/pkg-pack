@@ -1,25 +1,34 @@
-import { cloneDeep } from "es-toolkit";
-import {
-  ModuleKind,
-  ModuleResolutionKind,
-  type CompilerOptions,
-} from "typescript";
+import ts, { ModuleKind, ModuleResolutionKind } from "typescript";
 import { fixImportMetaPlugin } from "../plugins/fix-import-meta.js";
 import { loadJsonPlugin } from "../plugins/load-json.js";
 import { loadRawPlugin } from "../plugins/load-raw.js";
 import { loadScriptPlugin } from "../plugins/load-script.js";
 import { rewriteExtensionsPlugin } from "../plugins/rewrite-extensions.js";
-import type { CompileTarget, ExportCond, Preset } from "../types/index.js";
+import type { ModuleFormat, Preset } from "../types/index.js";
 import path from "node:path";
 
-type PresetKind = "esm-pure" | "cjs-compat";
-
 export function esmPurePreset(): Preset {
-  return presetFactory("esm-pure", ["default"]);
+  return presetFactory("esm-pure", [
+    {
+      outDir: "dist",
+      format: "esm",
+      declaration: true,
+    },
+  ]);
 }
 
 export function cjsCompatPreset(): Preset {
-  return presetFactory("cjs-compat", ["default"]);
+  return presetFactory("cjs-compat", [
+    {
+      outDir: "dist",
+      format: "cjs",
+      declaration: true,
+    },
+    {
+      outDir: "module",
+      format: "esm",
+    },
+  ]);
 }
 
 const extraPlugins = [
@@ -33,225 +42,108 @@ const extraPlugins = [
   loadRawPlugin({ loadOrder: 100 }),
 ];
 
-function presetFactory(preset: PresetKind, exportConds: ExportCond[]): Preset {
+function presetFactory(
+  presetName: string,
+  targets: {
+    outDir: string;
+    format: ModuleFormat;
+    declaration?: true;
+  }[]
+): Preset {
   return {
-    name: preset,
+    name: presetName,
     config: (config) => {
-      config.exportConds ??= exportConds;
       config.plugins ??= [];
       config.plugins.push(...extraPlugins);
     },
-    resolveTarget: (exportCond, config) => {
-      const {
-        srcDir,
-        ts: { compilerOptions },
-      } = config;
+    resolveTargets: ({ config, compilerOptions }) => {
+      const { srcDir } = config;
 
-      return fixOptionsMap[preset](exportCond, {
-        srcDir,
-        compilerOptions: compilerOptions,
+      return targets.map(({ outDir, format, declaration }) => {
+        return {
+          format,
+          outDir: path.resolve(outDir),
+          compilerOptions: getCompilerOptions(
+            presetName,
+            compilerOptions,
+            srcDir,
+            outDir,
+            format,
+            !!declaration
+          ),
+        };
       });
     },
   };
 }
 
-export type GetCompileTargetOptions = {
-  srcDir: string;
-  compilerOptions: CompilerOptions;
-};
-
-const fixOptionsMap: Record<
-  PresetKind,
-  (exportCond: ExportCond, options: GetCompileTargetOptions) => CompileTarget
-> = {
-  "esm-pure": (exportCond, { srcDir, compilerOptions: _compilerOptions }) => {
-    const compilerOptions = cloneDeep(_compilerOptions);
-
-    if (!compilerOptions.module) {
-      throw ModuleOptionMissingError();
-    }
-    if (!compilerOptions.moduleResolution) {
-      throw ModuleResolutionOptionMissingError();
-    }
-
-    compilerOptions.rootDir = srcDir;
-
-    const allowedModule = [
-      ModuleKind.Preserve,
-      ModuleKind.NodeNext,
-      ModuleKind.Node16,
-      ModuleKind.ES2015,
-      ModuleKind.ES2020,
-      ModuleKind.ES2022,
-    ];
-    if (!allowedModule.includes(compilerOptions.module)) {
-      throw ModuleOptionError(
-        "esm-pure",
-        exportCond,
-        compilerOptions.module,
-        allowedModule
-      );
-    }
-    if (compilerOptions.module !== ModuleKind.NodeNext) {
-      compilerOptions.module = ModuleKind.Node16;
-    }
-
-    const allowedModuleResolution = [
-      ModuleResolutionKind.NodeNext,
-      ModuleResolutionKind.Node16,
-      ModuleResolutionKind.Bundler,
-    ];
-    if (!allowedModuleResolution.includes(compilerOptions.moduleResolution)) {
-      throw ModuleResolutionOptionError(
-        "esm-pure",
-        exportCond,
-        compilerOptions.moduleResolution,
-        allowedModuleResolution
-      );
-    }
-    if (compilerOptions.moduleResolution !== ModuleResolutionKind.NodeNext) {
-      compilerOptions.moduleResolution = ModuleResolutionKind.Node16;
-    }
-
-    if (exportCond === "default") {
-      compilerOptions.outDir = path.join(path.dirname(srcDir), "dist");
-    } else {
-      compilerOptions.outDir = path.join(
-        path.dirname(srcDir),
-        `dist-${exportCond}`
-      );
-    }
-
-    if (exportCond === "default") {
-      compilerOptions.declaration = true;
-      compilerOptions.emitDeclarationOnly = false;
-    } else if (exportCond === "browser") {
-      compilerOptions.declaration = false;
-    } else {
-      throw new Error();
-    }
-
-    return {
-      exportCond,
-      format: "esm",
-      ts: { compilerOptions: compilerOptions },
-      outDir: compilerOptions.outDir,
-    };
-  },
-  "cjs-compat": (exportCond, { srcDir, compilerOptions: _compilerOptions }) => {
-    const compilerOptions = cloneDeep(_compilerOptions);
-
-    if (!compilerOptions.module) {
-      throw ModuleOptionMissingError();
-    }
-    if (!compilerOptions.moduleResolution) {
-      throw ModuleResolutionOptionMissingError();
-    }
-
-    compilerOptions.rootDir = srcDir;
-
-    const allowedModule = [
-      ModuleKind.Preserve,
-      ModuleKind.NodeNext,
-      ModuleKind.Node16,
-      ModuleKind.ES2015,
-      ModuleKind.ES2020,
-      ModuleKind.ES2022,
-    ];
-    if (!allowedModule.includes(compilerOptions.module)) {
-      throw ModuleOptionError(
-        "cjs-compat",
-        exportCond,
-        compilerOptions.module,
-        allowedModule
-      );
-    }
-    if (compilerOptions.module !== ModuleKind.NodeNext) {
-      compilerOptions.module = ModuleKind.Node16;
-    }
-
-    const allowedModuleResolution = [
-      ModuleResolutionKind.NodeNext,
-      ModuleResolutionKind.Node16,
-      ModuleResolutionKind.Bundler,
-    ];
-    if (!allowedModuleResolution.includes(compilerOptions.moduleResolution)) {
-      throw ModuleResolutionOptionError(
-        "cjs-compat",
-        exportCond,
-        compilerOptions.moduleResolution,
-        allowedModuleResolution
-      );
-    }
-    if (compilerOptions.moduleResolution !== ModuleResolutionKind.NodeNext) {
-      compilerOptions.moduleResolution = ModuleResolutionKind.Node16;
-    }
-
-    if (exportCond === "default") {
-      compilerOptions.outDir = path.join(path.dirname(srcDir), "dist");
-    } else {
-      compilerOptions.outDir = path.join(
-        path.dirname(srcDir),
-        `dist-${exportCond}`
-      );
-    }
-
-    if (exportCond === "default") {
-      compilerOptions.declaration = true;
-      compilerOptions.emitDeclarationOnly = false;
-      // so ts can compile to cjs
-      compilerOptions.verbatimModuleSyntax = false;
-    } else if (exportCond === "browser") {
-      compilerOptions.declaration = false;
-    } else {
-      throw new Error();
-    }
-
-    return {
-      exportCond,
-      format: exportCond === "default" ? "cjs" : "esm",
-      ts: { compilerOptions },
-      outDir: compilerOptions.outDir,
-    };
-  },
-};
-
-function ModuleOptionMissingError() {
-  return new Error(`Value for "module" option is not provided in tsconfig`);
-}
-
-function ModuleOptionError(
-  preset: PresetKind,
-  exportCond: ExportCond,
-  current: ModuleKind,
-  allowed: ModuleKind[]
+function getCompilerOptions(
+  presetName: string,
+  compilerOptions: ts.CompilerOptions,
+  srcDir: string,
+  outDir: string,
+  format: ModuleFormat,
+  declaration: boolean
 ) {
-  return new Error(
-    `With "${preset}" preset and with export condition "${exportCond}" only [${allowed.join(
-      ","
-    )}] values are allowed for "module" option in tsconfig (current "${
-      ModuleKind[current]
-    }")`
-  );
-}
+  compilerOptions = structuredClone(compilerOptions);
 
-function ModuleResolutionOptionMissingError() {
-  return new Error(
-    `Value for "moduleResolution" option is not provided in tsconfig`
-  );
-}
+  compilerOptions.outDir = path.join(path.dirname(srcDir), outDir);
 
-function ModuleResolutionOptionError(
-  preset: PresetKind,
-  exportCond: ExportCond,
-  current: ModuleResolutionKind,
-  allowed: ModuleResolutionKind[]
-) {
-  return new Error(
-    `With "${preset}" preset and with export condition "${exportCond}" only [${allowed.join(
-      ","
-    )}] values are allowed for "module" option in tsconfig (current "${
-      ModuleResolutionKind[current]
-    }")`
-  );
+  compilerOptions.rootDir = srcDir;
+
+  if (compilerOptions.verbatimModuleSyntax !== true) {
+    throw new Error(
+      `Value for "verbatimModuleSyntax" in "compilerOptions" must be true`
+    );
+  }
+  if (format === "cjs") {
+    compilerOptions.verbatimModuleSyntax = false;
+  }
+
+  if (!compilerOptions.module) {
+    throw new Error(
+      `Value for "module" option is not provided in "compilerOptions"`
+    );
+  }
+  const allowedModule = [ModuleKind.Preserve];
+  if (!allowedModule.includes(compilerOptions.module)) {
+    throw new Error(
+      `Preset "${presetName}" allows only [${allowedModule.join(
+        ","
+      )}] values for "module" option in tsconfig (current is "${
+        ModuleKind[compilerOptions.module]
+      }")`
+    );
+  }
+  // set node16 to ensure max compatibility
+  // and enable additional esm/cjs interop check by typescript
+  compilerOptions.module = ModuleKind.Node16;
+
+  if (!compilerOptions.moduleResolution) {
+    throw new Error(
+      `Value for "moduleResolution" option is not provided in "compilerOptions"`
+    );
+  }
+  const allowedModuleResolution = [ModuleResolutionKind.Bundler];
+  if (!allowedModuleResolution.includes(compilerOptions.moduleResolution)) {
+    throw new Error(
+      `Preset "${presetName}" allows only [${allowedModuleResolution.join(
+        ","
+      )}] bundler values for "moduleResolution" option in tsconfig (current "${
+        ModuleResolutionKind[compilerOptions.moduleResolution]
+      }")`
+    );
+  }
+  // set node16 to ensure max compatibility
+  // and enable additional esm/cjs interop check by typescript
+  compilerOptions.moduleResolution = ModuleResolutionKind.Node16;
+
+  if (declaration) {
+    compilerOptions.declaration = true;
+    compilerOptions.emitDeclarationOnly = false;
+  } else {
+    compilerOptions.declaration = false;
+  }
+
+  return compilerOptions;
 }

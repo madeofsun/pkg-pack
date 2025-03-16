@@ -1,0 +1,3 @@
+{
+  "extends": "@pkg-pack/configs/tsconfig-packages.json"
+}
