@@ -1,22 +1,21 @@
 {
-  "name": "example-vue-jsx",
+  "name": "example-nuxt-module",
+  "type": "module",
   "main": "./dist/index.js",
-  "module": "./module/index.js",
   "exports": {
     ".": {
-      "module": "./module/index.js",
       "default": "./dist/index.js"
     }
   },
   "files": [
-    "dist",
-    "module"
+    "dist"
   ],
   "scripts": {
     "build": "pkg-pack build"
   },
   "dependencies": {
     "@pkg-pack/interop": "workspace:^",
+    "esbuild": "^0.25.0",
     "tippy.js": "^6.3.7",
     "mitt": "^3.0.1",
     "vue": "^3.5.13"

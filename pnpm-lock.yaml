@@ -31,9 +31,6 @@ importers:
       pkg-pack:
         specifier: workspace:^
         version: link:../../packages/pkg-pack
-      vue:
-        specifier: ^3.5.13
-        version: 3.5.13(typescript@5.7.3)
 
   examples/example-css:
     devDependencies:
@@ -46,9 +43,6 @@ importers:
       pkg-pack:
         specifier: workspace:^
         version: link:../../packages/pkg-pack
-      vue:
-        specifier: ^3.5.13
-        version: 3.5.13(typescript@5.7.3)
 
   examples/example-esm:
     devDependencies:
@@ -58,27 +52,15 @@ importers:
       pkg-pack:
         specifier: workspace:^
         version: link:../../packages/pkg-pack
-      vue:
-        specifier: ^3.5.13
-        version: 3.5.13(typescript@5.7.3)
 
   examples/example-json:
     devDependencies:
-      '@pkg-pack/plugin-css-modules':
-        specifier: workspace:^
-        version: link:../../packages/plugin-css-modules
-      '@pkg-pack/plugin-vue-jsx':
-        specifier: workspace:^
-        version: link:../../packages/plugin-vue-jsx
       '@types/node':
         specifier: ^22
         version: 22.10.7
       pkg-pack:
         specifier: workspace:^
         version: link:../../packages/pkg-pack
-      vue:
-        specifier: ^3.5.13
-        version: 3.5.13(typescript@5.7.3)
 
   examples/example-nuxt-module:
     dependencies:
@@ -113,9 +95,6 @@ importers:
       '@pkg-pack/interop':
         specifier: workspace:^
         version: link:../../packages/interop
-      esbuild:
-        specifier: ^0.25.0
-        version: 0.25.1
       mitt:
         specifier: ^3.0.1
         version: 3.0.1

@@ -1,25 +1,22 @@
 {
   "name": "example-json",
-  "type": "module",
-  "main": "./dist/default/index.js",
+  "main": "./dist/index.js",
+  "module": "./module/index.js",
   "exports": {
     ".": {
-      "browser": "./dist-browser/index.js",
+      "module": "./module/index.js",
       "default": "./dist/index.js"
     }
   },
   "files": [
     "dist",
-    "dist-browser"
+    "module"
   ],
   "scripts": {
     "build": "pkg-pack build"
   },
   "devDependencies": {
-    "vue": "^3.5.13",
     "@types/node": "^22",
-    "pkg-pack": "workspace:^",
-    "@pkg-pack/plugin-css-modules": "workspace:^",
-    "@pkg-pack/plugin-vue-jsx": "workspace:^"
+    "pkg-pack": "workspace:^"
   }
 }

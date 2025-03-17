@@ -1,24 +1,23 @@
 {
   "name": "example-cjs",
   "version": "0.0.0",
-  "type": "module",
   "main": "./dist/index.js",
+  "module": "./module/index.js",
   "exports": {
     ".": {
-      "browser": "./dist-browser/index.js",
+      "module": "./module/index.js",
       "default": "./dist/index.js"
     }
   },
   "files": [
-    "dist-browser",
-    "dist"
+    "dist",
+    "module"
   ],
   "scripts": {
     "build": "pkg-pack build"
   },
   "devDependencies": {
     "@types/node": "^22",
-    "pkg-pack": "workspace:^",
-    "vue": "^3.5.13"
+    "pkg-pack": "workspace:^"
   }
 }
