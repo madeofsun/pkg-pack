@@ -35,7 +35,7 @@ export async function build(config: UserConfig) {
   const resolvedConfig: ResolvedConfig = {
     preset,
     plugins: config.plugins ?? [],
-    srcDir: config.srcDir ?? path.resolve("src"),
+    srcDir: config.srcDir ? path.resolve(config.srcDir) : path.resolve("src"),
     files: config.files ?? [],
     include: config.include ?? ["**/*"],
     exclude: config.exclude ?? [
@@ -59,7 +59,7 @@ export async function build(config: UserConfig) {
 
   const fileNames = files?.length
     ? files
-    : ts.sys.readDirectory(path.resolve(srcDir), undefined, exclude, include);
+    : ts.sys.readDirectory(srcDir, undefined, exclude, include);
 
   const inputFiles: InputFile[] = fileNames.map((fileName) => {
     const srcPath = path.resolve(fileName);

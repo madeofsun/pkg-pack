@@ -17,9 +17,15 @@ export function cssModulesPlugin(options?: {
 }): Plugin {
   return {
     name: "css-modules",
+    resolvedTargets(targets, config) {
+      for (const target of targets) {
+        target.compilerOptions.paths ??= {};
+        target.compilerOptions.paths["#css/*"] = [`./${config.srcDir}/#css`];
+      }
+    },
     load: {
       order: options?.loadOrder ?? 0,
-      async fn(file, options) {
+      async fn(file, { srcDir }) {
         if (!cssModuleRE.test(file.srcPath)) return;
 
         const rawContents = await file.read();
@@ -63,12 +69,13 @@ export function cssModulesPlugin(options?: {
           .map((name, index) => `import styles_${index} from '${name}'`)
           .join("\n");
 
-        const cssFileName = file.srcPath.replace(cssModuleRE, "$1.css");
+        const relativeCssFileName = file.srcPath
+          .replace(cssModuleRE, "$1.css")
+          .replace(srcDir, "");
+        const importSource = `#css${relativeCssFileName}`;
+        const cssFileName = `${srcDir}/#css${relativeCssFileName}`;
 
-        const importCss =
-          options.target.exportCond === "browser"
-            ? `import './${path.basename(cssFileName)}'\n`
-            : "";
+        const importCss = `import "${importSource}";`;
 
         const tsContents = `${importCss}${importString}\nconst styles = {\n${props
           .map(([name, expression]) => `\t["${name}"]: ${expression}`)
@@ -82,20 +89,13 @@ export function cssModulesPlugin(options?: {
           text: tsContents,
         });
 
-        if (importCss) {
-          const cssContents = res.code.toString();
+        const cssContents = res.code.toString();
 
-          const file: InputFile = {
-            srcPath: cssFileName,
-            read: () => Buffer.from(cssContents),
-          };
-
-          loadedFiles.push({
-            kind: "asset",
-            srcPath: file.srcPath,
-            text: cssContents,
-          });
-        }
+        loadedFiles.push({
+          kind: "asset",
+          srcPath: cssFileName,
+          text: cssContents,
+        });
 
         return loadedFiles;
       },
