@@ -71,6 +71,11 @@ export type Preset = {
 
 export type CompileTarget = {
   /**
+   * Arbitrary name for the target.
+   * Should be consistent across builds.
+   */
+  name: string;
+  /**
    * Directory that will contain output files.
    * */
   outDir: string;

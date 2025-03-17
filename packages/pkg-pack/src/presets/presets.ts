@@ -10,6 +10,7 @@ import path from "node:path";
 export function esmPurePreset(): Preset {
   return presetFactory("esm-pure", [
     {
+      name: "default",
       outDir: "dist",
       format: "esm",
       declaration: true,
@@ -20,11 +21,13 @@ export function esmPurePreset(): Preset {
 export function cjsCompatPreset(): Preset {
   return presetFactory("cjs-compat", [
     {
+      name: "default",
       outDir: "dist",
       format: "cjs",
       declaration: true,
     },
     {
+      name: "module",
       outDir: "module",
       format: "esm",
     },
@@ -45,6 +48,7 @@ const extraPlugins = [
 function presetFactory(
   presetName: string,
   targets: {
+    name: string;
     outDir: string;
     format: ModuleFormat;
     declaration?: true;
@@ -59,8 +63,9 @@ function presetFactory(
     resolveTargets: ({ config, compilerOptions }) => {
       const { srcDir } = config;
 
-      return targets.map(({ outDir, format, declaration }) => {
+      return targets.map(({ name, outDir, format, declaration }) => {
         return {
+          name,
           format,
           outDir: path.resolve(outDir),
           compilerOptions: getCompilerOptions(

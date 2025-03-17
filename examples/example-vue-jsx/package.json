@@ -8,7 +8,18 @@
       "default": "./dist/index.js"
     }
   },
+  "imports": {
+    "#css_default/*.css": {
+      "module": "./dist/#css/*.css",
+      "default": "./dist/#css/fallback.js"
+    },
+    "#css_module/*.css": {
+      "module": "./module/#css/*.css",
+      "default": "./nodule/#css/fallback.js"
+    }
+  },
   "files": [
+    "#css",
     "dist",
     "module"
   ],

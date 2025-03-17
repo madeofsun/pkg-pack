@@ -3,7 +3,7 @@ import path from "node:path";
 import {
   editText,
   findModuleRefs,
-  type InputFile,
+  type CompileTarget,
   type LoadedFile,
   type Plugin,
   type TextChange,
@@ -11,21 +11,17 @@ import {
 
 const cssModuleRE = /(.*)\.module\.css$/;
 
+const getCssId = (target: CompileTarget) => `#css_${target.name}`;
+
 export function cssModulesPlugin(options?: {
   loadOrder?: number;
   beforeEmitOrder?: number;
 }): Plugin {
   return {
     name: "css-modules",
-    resolvedTargets(targets, config) {
-      for (const target of targets) {
-        target.compilerOptions.paths ??= {};
-        target.compilerOptions.paths["#css/*"] = [`./${config.srcDir}/#css`];
-      }
-    },
     load: {
       order: options?.loadOrder ?? 0,
-      async fn(file, { srcDir }) {
+      async fn(file, { srcDir, target }) {
         if (!cssModuleRE.test(file.srcPath)) return;
 
         const rawContents = await file.read();
@@ -72,7 +68,7 @@ export function cssModulesPlugin(options?: {
         const relativeCssFileName = file.srcPath
           .replace(cssModuleRE, "$1.css")
           .replace(srcDir, "");
-        const importSource = `#css${relativeCssFileName}`;
+        const importSource = `${getCssId(target)}${relativeCssFileName}`;
         const cssFileName = `${srcDir}/#css${relativeCssFileName}`;
 
         const importCss = `import "${importSource}";`;
@@ -150,6 +146,14 @@ export function cssModulesPlugin(options?: {
 
         updateFiles(updates);
       },
+    },
+    afterEmit(files) {
+      const distPath = `#css/fallback.js`;
+      files.set(distPath, {
+        kind: "source",
+        distPath,
+        text: "\n",
+      });
     },
   };
 }
