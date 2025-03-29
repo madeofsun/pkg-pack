@@ -59,7 +59,12 @@ export type UserConfig = {
 };
 
 export type ResolvedConfig = Readonly<
-  Required<UserConfig> & {
+  Required<OmitStrict<UserConfig, "files" | "include" | "exclude">> & {
+    /**
+     * Files to include in the build
+     * after processing `files`, `include` and `exclude`.
+     *  */
+    fileNames: string[];
     targets: CompileTarget[];
   }
 >;

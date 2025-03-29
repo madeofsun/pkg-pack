@@ -6,7 +6,6 @@ import { getTsErrors } from "../get-ts-errors.js";
 import { resolveConfig } from "../resolve-config.js";
 import { commonArgs } from "./common.js";
 import { ExitCode } from "./exit-code.js";
-import { globalLogger } from "../helpers/logger.js";
 
 export default defineCommand({
   meta: {

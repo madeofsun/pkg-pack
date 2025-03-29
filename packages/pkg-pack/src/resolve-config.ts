@@ -28,18 +28,28 @@ export async function resolveConfig(
   const configHook = createConfigHook(config.plugins ?? []);
   await configHook(config);
 
+  const srcDir = path.resolve(config.srcDir ?? "src");
+
+  const include = config.include ?? ["**/*"];
+
+  const exclude = config.exclude ?? [
+    "**/*.(test|spec).(js|jsx|cjs|mjs|ts|tsx|cts|mts)",
+    "**/__tests__/**/*",
+    "**/__fixtures__/**/*",
+    "**/__mocks__/**/*",
+  ];
+
+  const fileNames = (
+    config.files?.length
+      ? config.files
+      : ts.sys.readDirectory(srcDir, undefined, exclude, include)
+  ).map((fileName) => path.resolve(fileName));
+
   const preResolvedConfig: Omit<ResolvedConfig, "targets"> = {
     preset,
     plugins: config.plugins ?? [],
-    srcDir: path.resolve(config.srcDir ?? "src"),
-    files: config.files ?? [],
-    include: config.include ?? ["**/*"],
-    exclude: config.exclude ?? [
-      "**/*.(test|spec).(js|jsx|cjs|mjs|ts|tsx|cts|mts)",
-      "**/__tests__/**/*",
-      "**/__fixtures__/**/*",
-      "**/__mocks__/**/*",
-    ],
+    srcDir,
+    fileNames,
     tsconfig: config.tsconfig ?? "tsconfig.json",
   };
 
