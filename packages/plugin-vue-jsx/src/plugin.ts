@@ -7,21 +7,23 @@ import type { OutputSource, Plugin } from "pkg-pack";
 export function vueJsxPlugin(): Plugin {
   return {
     name: "vue-jsx",
-    afterEmit(files, { target }) {
-      for (const file of [...files.values()]) {
-        if (file.kind !== "source" || !file.distPath.endsWith(".jsx")) {
-          continue;
+    afterEmit: {
+      fn({ files, target }) {
+        for (const file of [...files.values()]) {
+          if (file.kind !== "source" || !file.distPath.endsWith(".jsx")) {
+            continue;
+          }
+
+          file.text = transform(file, target.format === "cjs");
+
+          // .jsx -> .js
+          // inside all files extensions are already js
+          const newName = file.distPath.slice(0, -1);
+          files.delete(file.distPath);
+          file.distPath = newName;
+          files.set(newName, file);
         }
-
-        file.text = transform(file, target.format === "cjs");
-
-        // .jsx -> .js
-        // inside all files extensions are already js
-        const newName = file.distPath.slice(0, -1);
-        files.delete(file.distPath);
-        file.distPath = newName;
-        files.set(newName, file);
-      }
+      },
     },
   };
 }

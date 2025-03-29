@@ -1,3 +1,4 @@
 {
-  "extends": "@pkg-pack/configs/tsconfig-packages.json"
+  "extends": "@pkg-pack/configs/tsconfig-packages.json",
+  "exclude": ["node_modules", "dist"]
 }

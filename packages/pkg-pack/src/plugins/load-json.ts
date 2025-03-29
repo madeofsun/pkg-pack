@@ -5,14 +5,10 @@ import { editText, type TextChange } from "../helpers/edit-text.js";
 import { assertIsNotFalsy } from "../helpers/assert.js";
 import ts from "typescript";
 
-export function loadJsonPlugin(options?: {
-  loadOrder?: number;
-  beforeEmitOrder?: number;
-}): Plugin {
+export function loadJsonPlugin(): Plugin {
   return {
     name: "pkg-pack:load-json",
     load: {
-      order: options?.loadOrder ?? 0,
       async fn(file, { target }) {
         if (
           !target.compilerOptions.resolveJsonModule ||
@@ -33,7 +29,6 @@ export function loadJsonPlugin(options?: {
       },
     },
     beforeEmit: {
-      order: options?.beforeEmitOrder ?? 0,
       async fn({ languageService, updateFiles, srcDir }) {
         const program = languageService.getProgram();
         assertIsNotFalsy(program);
@@ -43,7 +38,8 @@ export function loadJsonPlugin(options?: {
         const newFiles = new Set<string>();
 
         for (const fileName of program.getRootFileNames()) {
-          const sourceFile = program.getSourceFile(fileName);
+          const sourceFile: ts.SourceFile | undefined =
+            program.getSourceFile(fileName);
           assertIsNotFalsy(sourceFile);
 
           const refs = findModuleRefs(sourceFile);

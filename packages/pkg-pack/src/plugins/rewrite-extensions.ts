@@ -1,17 +1,17 @@
 import path from "node:path";
 import fs from "node:fs";
-import type { LoadedFile, Plugin } from "../types/index.js";
+import type { LoadedFile, Logger, Plugin } from "../types/index.js";
 import { assertIsNotFalsy } from "../helpers/assert.js";
 import { findModuleRefs } from "../helpers/ast.js";
 import { editText, type TextChange } from "../helpers/edit-text.js";
+import type ts from "typescript";
 
-export function rewriteExtensionsPlugin(options?: {
-  beforeEmitOrder?: number;
-}): Plugin {
+export function rewriteExtensionsPlugin(): Plugin {
+  let logger!: Logger;
   return {
+    logger: (_logger) => (logger = _logger),
     name: "pkg-pack:rewrite-extensions",
     beforeEmit: {
-      order: options?.beforeEmitOrder ?? 0,
       fn({ languageService, updateFiles, hasFile, srcDir }) {
         const program = languageService.getProgram();
         assertIsNotFalsy(program);
@@ -26,7 +26,8 @@ export function rewriteExtensionsPlugin(options?: {
         };
 
         for (const fileName of program.getRootFileNames()) {
-          const sourceFile = program.getSourceFile(fileName);
+          const sourceFile: ts.SourceFile | undefined =
+            program.getSourceFile(fileName);
           assertIsNotFalsy(sourceFile);
 
           const refs = findModuleRefs(sourceFile);
@@ -34,7 +35,12 @@ export function rewriteExtensionsPlugin(options?: {
           for (const ref of refs) {
             if (!ref.specifier.startsWith(".")) continue;
 
-            const resolved = resolveFile(ref.specifier, fileName, fileExists);
+            const resolved = resolveFile(
+              ref.specifier,
+              fileName,
+              fileExists,
+              logger
+            );
             if (!resolved) {
               continue;
             }
@@ -76,7 +82,8 @@ const autoResolved = [
 function resolveFile(
   importPath: string,
   currentPath: string,
-  fileExists: (filePath: string) => boolean
+  fileExists: (filePath: string) => boolean,
+  logger: Logger
 ) {
   const checkFile = (importPath: string) =>
     fileExists(path.resolve(path.dirname(currentPath), importPath));
@@ -100,16 +107,16 @@ function resolveFile(
   }
 
   if (found.length === 0) {
-    console.warn(
-      `[WARN][plugin internal:rewrite-extensions] Could not resolve "${importPath}" in "${currentPath}". Skipping...`
+    logger.warn(
+      `Could not resolve "${importPath}" in "${currentPath}". Skipping...`
     );
     return undefined;
   }
 
   if (found.length > 1) {
     const formatted = found.join("\n");
-    console.warn(
-      `[WARN][plugin internal:rewrite-extensions] Import path "${importPath}" in "${currentPath}" resolves to multiple files:\n${formatted}\n`
+    logger.warn(
+      `Import path "${importPath}" in "${currentPath}" resolves to multiple files:\n${formatted}\n`
     );
   }
   return found[0]!;

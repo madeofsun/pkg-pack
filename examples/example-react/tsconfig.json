@@ -1,7 +1,7 @@
 {
   "extends": "@pkg-pack/configs/tsconfig-examples.json",
   "compilerOptions": {
-    "jsx": "preserve",
-    "jsxImportSource": "vue"
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
   }
 }

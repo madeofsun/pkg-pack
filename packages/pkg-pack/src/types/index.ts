@@ -58,13 +58,18 @@ export type UserConfig = {
   tsconfig?: string;
 };
 
-export type ResolvedConfig = Readonly<Required<UserConfig>>;
+export type ResolvedConfig = Readonly<
+  Required<UserConfig> & {
+    targets: CompileTarget[];
+  }
+>;
 
 export type Preset = {
   name: string;
+  logger?: (logger: Logger) => void;
   config?: (config: UserConfig) => OrPromise<void>;
   resolveTargets: (params: {
-    config: ResolvedConfig;
+    config: OmitStrict<ResolvedConfig, "targets">;
     compilerOptions: ts.CompilerOptions;
   }) => OrPromise<CompileTarget[]>;
 };
@@ -145,31 +150,46 @@ export type OutputAsset =
 
 export type OutputFile = OutputSource | OutputAsset;
 
+export type OutputFiles = Map<string, OutputFile>;
+
+export type BuildResult = {
+  target: CompileTarget;
+  diagnostics: ts.Diagnostic[];
+  files: OutputFiles;
+};
+
 export type Plugin = {
   name: string;
+  logger?: (logger: Logger) => void;
   config?: PluginHook<ConfigHook>;
-  resolvedTargets?: PluginHook<ResolvedTargetsHook>;
+  resolvedConfig?: PluginHook<ResolvedConfigHook>;
   load?: PluginHook<LoadHook>;
   afterLoad?: PluginHook<AfterLoadHook>;
   beforeEmit?: PluginHook<BeforeEmitHook>;
   afterEmit?: PluginHook<AfterEmitHook>;
 };
 
-export type PluginHook<T> = T | { order: number; fn: T };
+export type PluginHook<T> = { order?: number; fn: T };
+
+export type PluginHooks = keyof {
+  [P in keyof Plugin as Exclude<
+    Plugin[P],
+    undefined
+  > extends PluginHook<unknown>
+    ? P
+    : never]: unknown;
+};
 
 export type ConfigHook = (config: UserConfig) => OrPromise<void>;
 
-export type ResolvedTargetsHook = (
-  targets: CompileTarget[],
-  config: ResolvedConfig
-) => OrPromise<void>;
+export type ResolvedConfigHook = (config: ResolvedConfig) => OrPromise<void>;
 
-export type TargetHookOptions = {
+export type BuildHookOptions = {
   srcDir: string;
   target: CompileTarget;
 };
 
-export type LoadHookOptions = TargetHookOptions & {
+export type LoadHookOptions = BuildHookOptions & {
   loadFile: LoadHook;
   loadContext: Record<string | symbol, unknown>;
 };
@@ -179,14 +199,14 @@ export type LoadHook = (
   options: LoadHookOptions
 ) => OrPromise<undefined | LoadedFile | LoadedFile[]>;
 
-export type AfterLoadHookOptions = TargetHookOptions;
+export type AfterLoadHookOptions = BuildHookOptions;
 
 export type AfterLoadHook = (
   files: Map<string, LoadedFile>,
   options: AfterLoadHookOptions
 ) => OrPromise<void>;
 
-export type BeforeEmitHookOptions = TargetHookOptions & {
+export type BeforeEmitHookOptions = BuildHookOptions & {
   languageService: ts.LanguageService;
   getFileNames(): string[];
   getFile(fileName: string): Readonly<LoadedFile> | undefined;
@@ -201,9 +221,20 @@ export type BeforeEmitHook = (
   options: BeforeEmitHookOptions
 ) => OrPromise<void>;
 
-export type AfterEmitHookOptions = TargetHookOptions;
+export type AfterEmitHookOptions = BuildHookOptions & {
+  files: OutputFiles;
+  diagnostics: ts.Diagnostic[];
+};
 
-export type AfterEmitHook = (
-  files: Map<string, OutputFile>,
-  options: AfterEmitHookOptions
-) => OrPromise<void>;
+export type AfterEmitHook = (options: AfterEmitHookOptions) => OrPromise<void>;
+
+export interface LogOptions {}
+export interface LogErrorOptions extends LogOptions {
+  error?: Error;
+}
+
+export type Logger = {
+  info(msg: string, options?: LogOptions): void;
+  warn(msg: string, options?: LogOptions): void;
+  error(msg: string, options?: LogErrorOptions): void;
+};

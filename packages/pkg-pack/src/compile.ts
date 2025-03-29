@@ -12,7 +12,10 @@ export async function compile(
   loadedFiles: Map<string, LoadedFile>,
   beforeEmit: BeforeEmitHook,
   target: CompileTarget
-): Promise<{ errors: ts.Diagnostic[] } | Map<string, OutputFile>> {
+): Promise<{
+  diagnostics: ts.Diagnostic[];
+  files: Map<string, OutputFile>;
+}> {
   let projectVersion = 0;
   const incProjectVersion = () => {
     projectVersion += 1;
@@ -82,44 +85,28 @@ export async function compile(
     },
   };
 
-  const compilerOptions = Object.assign(
-    {
-      noEmitOnError: true,
-    },
-    target.compilerOptions,
-    {
-      noEmit: false,
-      incremental: true,
-      // sourceMap: true,
-    }
-  );
+  const compilerOptions = {
+    // noEmitOnError: false,
+    ...structuredClone(target.compilerOptions),
+    noEmit: false,
+    incremental: true,
+    noEmitOnError: false,
+    // sourceMap: true,
+  };
 
   const _tsHost = ts.createCompilerHost(compilerOptions);
 
   const tsHost: ts.LanguageServiceHost = {
     getDefaultLibFileName: _tsHost.getDefaultLibFileName,
     trace: (s) => {
-      console.log("trace", s);
       _tsHost.trace?.(s);
     },
     useCaseSensitiveFileNames: _tsHost.useCaseSensitiveFileNames,
     getCompilationSettings: () => compilerOptions,
     getScriptFileNames: () => files.getSourceFileNames(),
-    getProjectVersion: () => {
-      const v = projectVersion.toString();
-      // console.log("pv", v);
-      return v;
-    },
-    getScriptVersion: (fileName) => {
-      const v = getFileVersion(fileName).toString();
-      // console.log("sv", v);
-      return v;
-    },
+    getProjectVersion: () => projectVersion.toString(),
+    getScriptVersion: (fileName) => getFileVersion(fileName).toString(),
     getScriptSnapshot: (fileName) => {
-      if (fileName.includes("__@")) {
-        console.log("q", fileName);
-        console.log(_fileVersions);
-      }
       let fileContents = files.getSource(fileName);
       if (typeof fileContents === "string") {
         return ts.ScriptSnapshot.fromString(fileContents);
@@ -135,30 +122,25 @@ export async function compile(
     },
     realpath: ts.sys.realpath,
     getCurrentDirectory: ts.sys.getCurrentDirectory,
+    // TODO: check and fix
     directoryExists: (directoryName) => {
       if (directoryName.startsWith(srcDir)) {
         return true;
-        // TODO: implement
         return files
           .getFileNames()
           .some((name) => name.startsWith(directoryName));
       }
       return ts.sys.directoryExists(directoryName);
     },
-    // TODO: implement
+    // TODO: check and fix
     getDirectories: (directoryName) => {
-      console.log("www", path);
       return ts.sys.getDirectories(directoryName);
     },
-    // TODO: implement
+    // TODO: check and fix
     readDirectory: (path, extensions, exclude, include, depth) => {
-      console.log("ppp", path);
       return ts.sys.readDirectory(path, extensions, exclude, include, depth);
     },
     fileExists: (fileName) => {
-      if (fileName.includes("__@")) {
-        console.log("w", fileName);
-      }
       if (files.hasFile(fileName)) {
         return true;
       }
@@ -168,9 +150,6 @@ export async function compile(
       return ts.sys.fileExists(fileName);
     },
     readFile: (fileName) => {
-      if (fileName.includes("__@")) {
-        console.log("e", fileName);
-      }
       const fileContents = files.getSource(fileName);
       if (typeof fileContents === "string") {
         return fileContents;
@@ -197,20 +176,19 @@ export async function compile(
     languageService,
   });
 
-  const errors: ts.Diagnostic[] = [];
-
+  const diagnostics: ts.Diagnostic[] = [];
   const outputFiles = new Map<string, OutputFile>();
 
-  for (const fileName of languageService.getProgram()!.getRootFileNames()) {
+  const program = languageService.getProgram()!;
+  for (const fileName of program.getRootFileNames()) {
     // ignore synthetic package.json
     if (pkgJsonPath && fileName === pkgJsonPath) {
       continue;
     }
+    diagnostics.push(
+      ...ts.getPreEmitDiagnostics(program, program.getSourceFile(fileName))
+    );
     const res = languageService.getEmitOutput(fileName);
-    if (res.diagnostics.length > 0) {
-      errors.push(...res.diagnostics);
-      continue;
-    }
     for (const { name, text } of res.outputFiles) {
       let distPath = name.replace(target.outDir, "");
       if (!distPath.startsWith("/")) {
@@ -223,10 +201,6 @@ export async function compile(
         text,
       });
     }
-  }
-
-  if (errors.length > 0) {
-    return { errors };
   }
 
   for (const file of loadedFiles.values()) {
@@ -253,5 +227,8 @@ export async function compile(
     }
   }
 
-  return outputFiles;
+  return {
+    files: outputFiles,
+    diagnostics,
+  };
 }

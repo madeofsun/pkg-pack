@@ -1,15 +1,16 @@
 import { findMemberExpressions, getNextName } from "../helpers/ast.js";
 import { editText, type TextChange } from "../helpers/edit-text.js";
-import type { LoadedFile, Plugin } from "../types/index.js";
+import type { LoadedFile, Logger, Plugin } from "../types/index.js";
 import ts from "typescript";
 
-export function fixImportMetaPlugin(options?: {
-  beforeEmitOrder?: number;
-}): Plugin {
+const PLUGIN_NAME = "internal:fix-import-meta";
+
+export function fixImportMetaPlugin(): Plugin {
+  let logger!: Logger;
   return {
-    name: "internal:fix-import-meta",
+    logger: (_logger) => (logger = _logger),
+    name: PLUGIN_NAME,
     beforeEmit: {
-      order: options?.beforeEmitOrder ?? 0,
       fn({ languageService, updateFiles }) {
         const program = languageService.getProgram()!;
         const typeChecker = program.getTypeChecker();
@@ -112,7 +113,7 @@ export function fixImportMetaPlugin(options?: {
                         },
                         newText: name,
                       });
-                      console.warn(
+                      logger.warn(
                         `${fileName}: require('${moduleSpec}') was replaced with static import`
                       );
                     } else if (

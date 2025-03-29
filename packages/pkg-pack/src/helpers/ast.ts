@@ -27,16 +27,6 @@ export function findModuleRefs(sourceFile: ts.SourceFile): ModuleRef[] {
   const refs: ModuleRef[] = [];
 
   const visitor: ts.Visitor = (node) => {
-    let found:
-      | {
-          container:
-            | ts.ImportDeclaration
-            | ts.ExportDeclaration
-            | ts.CallExpression
-            | ts.ImportEqualsDeclaration;
-          stringLiteral: ts.StringLiteral;
-        }
-      | undefined;
     if (
       ts.isImportDeclaration(node) &&
       ts.isStringLiteral(node.moduleSpecifier)

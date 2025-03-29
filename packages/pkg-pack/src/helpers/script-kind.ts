@@ -1,10 +1,7 @@
-import type _ts from "typescript";
+import ts from "typescript";
 
 // https://github.com/microsoft/TypeScript/blob/main/src/compiler/utilities.ts#L9834C1-L9854C2
-export function getScriptKindFromFileName(
-  ts: typeof _ts,
-  fileName: string
-): _ts.ScriptKind {
+export function getScriptKindFromFileName(fileName: string): ts.ScriptKind {
   const ext = fileName.slice(fileName.lastIndexOf("."));
   switch (ext.toLowerCase()) {
     case ".js":

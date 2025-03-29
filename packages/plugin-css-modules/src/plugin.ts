@@ -13,14 +13,10 @@ const cssModuleRE = /(.*)\.module\.css$/;
 
 const getCssId = (target: CompileTarget) => `#css_${target.name}`;
 
-export function cssModulesPlugin(options?: {
-  loadOrder?: number;
-  beforeEmitOrder?: number;
-}): Plugin {
+export function cssModulesPlugin(): Plugin {
   return {
     name: "css-modules",
     load: {
-      order: options?.loadOrder ?? 0,
       async fn(file, { srcDir, target }) {
         if (!cssModuleRE.test(file.srcPath)) return;
 
@@ -97,7 +93,6 @@ export function cssModulesPlugin(options?: {
       },
     },
     beforeEmit: {
-      order: options?.beforeEmitOrder ?? 0,
       async fn({ languageService, updateFiles, hasFile }) {
         const program = languageService.getProgram()!;
 
@@ -147,13 +142,15 @@ export function cssModulesPlugin(options?: {
         updateFiles(updates);
       },
     },
-    afterEmit(files) {
-      const distPath = `#css/fallback.js`;
-      files.set(distPath, {
-        kind: "source",
-        distPath,
-        text: "\n",
-      });
+    afterEmit: {
+      fn({ files }) {
+        const distPath = `#css/fallback.js`;
+        files.set(distPath, {
+          kind: "source",
+          distPath,
+          text: "\n",
+        });
+      },
     },
   };
 }

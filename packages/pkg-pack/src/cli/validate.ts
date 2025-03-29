@@ -1,7 +1,7 @@
 import { defineCommand } from "citty";
-import { resolveConfig } from "./resolve-config.js";
+import { loadConfig } from "../load-config.js";
 import { commonArgs } from "./common.js";
-import { build } from "../build.js";
+import { resolveConfig } from "../resolve-config.js";
 
 export default defineCommand({
   meta: {
@@ -12,7 +12,7 @@ export default defineCommand({
     ...commonArgs,
   },
   async run({ args }) {
-    const config = await resolveConfig(args.dir, args.config);
-    await build(config);
+    const userConfig = await loadConfig(args.dir, args.config);
+    const resolvedConfig = await resolveConfig(userConfig);
   },
 });

@@ -1,13 +1,4 @@
 {
-  "extends": "@pkg-pack/configs/tsconfig-base.json",
-  "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
-    "target": "ES2022",
-    "module": "Preserve",
-    "moduleResolution": "bundler",
-    "jsx": "preserve",
-    "types": ["node"],
-    "resolveJsonModule": true
-  }
+  "extends": "@pkg-pack/configs/tsconfig-examples.json",
+  "exclude": ["node_modules", "dist", "module"]
 }
