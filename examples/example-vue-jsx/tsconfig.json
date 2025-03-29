@@ -1,5 +1,6 @@
 {
   "extends": "@pkg-pack/configs/tsconfig-examples.json",
+  "exclude": ["node_modules", "dist", "module"],
   "compilerOptions": {
     "jsx": "preserve",
     "jsxImportSource": "vue"

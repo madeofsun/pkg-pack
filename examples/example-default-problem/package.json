@@ -1,0 +1,26 @@
+{
+  "name": "example-default-problem",
+  "main": "./dist/index.js",
+  "module": "./module/index.js",
+  "exports": {
+    ".": {
+      "module": "./module/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "module"
+  ],
+  "scripts": {
+    "build": "pkg-pack build"
+  },
+  "dependencies": {
+    "@pkg-pack/interop": "workspace:^",
+    "tippy.js": "^6.3.7",
+    "mitt": "^3.0.1"
+  },
+  "devDependencies": {
+    "pkg-pack": "workspace:^"
+  }
+}
