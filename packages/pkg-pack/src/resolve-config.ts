@@ -10,7 +10,7 @@ import type {
   ResolvedConfigHook,
   UserConfig,
 } from "./types";
-import { contextLogger, globalLogger } from "./helpers/logger";
+import { contextLogger } from "./helpers/logger";
 
 export async function resolveConfig(
   config: UserConfig
@@ -108,7 +108,8 @@ function resolveTsOptions(tsconfig: string) {
           getNewLine: () => ts.sys.newLine,
           getCanonicalFileName: (fileName) => fileName,
         });
-        globalLogger.info(message);
+
+        throw new Error(message, { cause: diagnostic });
       },
     };
     parsedCommandLine = ts.getParsedCommandLineOfConfigFile(

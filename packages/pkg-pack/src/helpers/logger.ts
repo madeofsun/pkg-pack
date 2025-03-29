@@ -2,12 +2,6 @@ import type { Logger } from "../types";
 
 type LogLevel = "error" | "warn" | "info";
 
-export const globalLogger = {
-  info(message: string) {
-    console.log(message);
-  },
-};
-
 export function contextLogger(context: string): Logger {
   const log = (level: LogLevel, message: string, error?: Error) => {
     console.log(

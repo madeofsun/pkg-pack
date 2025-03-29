@@ -25,11 +25,9 @@ export default defineCommand({
       const errorOutput = getTsErrors(result);
       if (errorOutput.length > 0) {
         hasErrors = true;
-        globalLogger.info(
-          `=== Output for target "${result.target.name}" ===\n`
-        );
-        globalLogger.info(errorOutput);
-        globalLogger.info(`\n===`);
+        console.log(`=== Output for target "${result.target.name}" ===\n`);
+        console.log(errorOutput);
+        console.log(`\n===`);
       }
       output(result);
     }
