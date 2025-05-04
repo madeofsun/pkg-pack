@@ -50,6 +50,7 @@ export async function resolveConfig(
     plugins: config.plugins ?? [],
     srcDir,
     fileNames,
+    entries: config.entries ?? { ".": "./index.ts" },
     tsconfig: config.tsconfig ?? "tsconfig.json",
   };
 

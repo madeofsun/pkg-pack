@@ -21,6 +21,8 @@
   },
   "scripts": {
     "build": "jiti ./src/cli/index.ts build",
+    "check": "jiti ./src/cli/index.ts check",
+    "check:fix": "npm run check -- --fix",
     "types": "npx tsc"
   },
   "dependencies": {

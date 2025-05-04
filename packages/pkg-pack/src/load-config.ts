@@ -1,8 +1,7 @@
-import fs from "node:fs";
 import { createJiti } from "jiti";
-
-import type { UserConfig } from "./types/index.js";
+import fs from "node:fs";
 import path from "node:path";
+import type { UserConfig } from "./types";
 
 const jiti = createJiti(import.meta.url);
 

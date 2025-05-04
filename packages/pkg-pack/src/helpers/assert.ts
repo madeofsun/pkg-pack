@@ -6,3 +6,9 @@ export function assertIsNotFalsy<T>(
     throw new Error("Value is falsy", { cause });
   }
 }
+
+export function assert<T>(value: T | Error): asserts value is T {
+  if (value instanceof Error) {
+    throw value;
+  }
+}

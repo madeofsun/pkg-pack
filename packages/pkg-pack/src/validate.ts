@@ -1,4 +1,0 @@
-/**
- * TBD
- */
-export function validate() {}

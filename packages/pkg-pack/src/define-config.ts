@@ -1,4 +1,4 @@
-import type { UserConfig } from "./types/index.js";
+import type { UserConfig } from "./types";
 
 export function defineConfig(config: UserConfig) {
   return config;

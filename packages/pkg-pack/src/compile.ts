@@ -5,7 +5,7 @@ import type {
   CompileTarget,
   LoadedFile,
   OutputFile,
-} from "./types/index.js";
+} from "./types";
 
 export async function compile(
   srcDir: string,

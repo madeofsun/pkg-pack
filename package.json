@@ -16,7 +16,10 @@
     "turbo": "^2.4.0",
     "typescript": "~5.4.5",
     "@types/node": "^18",
-    "@pkg-pack/configs": "workspace:^"
+    "@pkg-pack/configs": "workspace:^",
+    "vite": "^6.0.2",
+    "vitest": "^3.1.2",
+    "@vitest/coverage-istanbul": "^3.1.2"
   },
   "scripts": {
     "dev": "turbo watch build --filter=\"./packages/*\"",

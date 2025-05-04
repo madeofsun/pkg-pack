@@ -6,7 +6,6 @@ export { getTsErrors } from "./get-ts-errors.js";
 export { loadConfig } from "./load-config.js";
 export { output } from "./output.js";
 export { resolveConfig } from "./resolve-config.js";
-export { validate } from "./validate.js";
 
 export * from "./plugins/index.js";
 

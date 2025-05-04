@@ -4,7 +4,8 @@
 import pkg from "../../package.json";
 
 import { defineCommand, runMain } from "citty";
-import buildCmd from "./build.js";
+import build from "./build.js";
+import check from "./check.js";
 
 const { name, version, description } = pkg;
 
@@ -15,7 +16,8 @@ const main = defineCommand({
     description,
   },
   subCommands: {
-    build: buildCmd,
+    build,
+    check,
   },
 });
 

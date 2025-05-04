@@ -1,38 +1,47 @@
+import path from "node:path";
 import ts from "typescript";
+import { setHookOrder } from "../helpers/set-hook-order.js";
 import { fixImportMetaPlugin } from "../plugins/fix-import-meta.js";
 import { loadJsonPlugin } from "../plugins/load-json.js";
 import { loadRawPlugin } from "../plugins/load-raw.js";
 import { loadScriptPlugin } from "../plugins/load-script.js";
 import { rewriteExtensionsPlugin } from "../plugins/rewrite-extensions.js";
-import type { ModuleFormat, Preset } from "../types/index.js";
-import path from "node:path";
-import { setHookOrder } from "../helpers/set-hook-order.js";
+import type { ModuleFormat, Plugin, Preset } from "../types";
+import { checkCjsCompat, checkEsmPure } from "./checks";
 
 export function esmPurePreset(): Preset {
-  return presetFactory("esm-pure", [
-    {
-      name: "default",
-      outDir: "dist",
-      format: "esm",
-      declaration: true,
-    },
-  ]);
+  return presetFactory(
+    "esm-pure",
+    [
+      {
+        name: "default",
+        outDir: "dist",
+        format: "esm",
+        declaration: true,
+      },
+    ],
+    [checkEsmPure]
+  );
 }
 
 export function cjsCompatPreset(): Preset {
-  return presetFactory("cjs-compat", [
-    {
-      name: "default",
-      outDir: "dist",
-      format: "cjs",
-      declaration: true,
-    },
-    {
-      name: "module",
-      outDir: "module",
-      format: "esm",
-    },
-  ]);
+  return presetFactory(
+    "cjs-compat",
+    [
+      {
+        name: "default",
+        outDir: "dist",
+        format: "cjs",
+        declaration: true,
+      },
+      {
+        name: "module",
+        outDir: "module",
+        format: "esm",
+      },
+    ],
+    [checkCjsCompat]
+  );
 }
 
 const extraPlugins = [
@@ -53,13 +62,14 @@ function presetFactory(
     outDir: string;
     format: ModuleFormat;
     declaration?: true;
-  }[]
+  }[],
+  plugins: Plugin[]
 ): Preset {
   return {
     name: presetName,
     config: (config) => {
       config.plugins ??= [];
-      config.plugins.push(...extraPlugins);
+      config.plugins.push(...extraPlugins, ...plugins);
     },
     resolveTargets: ({ config, compilerOptions }) => {
       const { srcDir } = config;

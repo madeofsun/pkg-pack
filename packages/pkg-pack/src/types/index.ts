@@ -51,7 +51,13 @@ export type UserConfig = {
    * Filenames are resolved relative to `srcDir`.
    * When this options is used, `include` and `exclude` options are ignored.
    * */
-  files?: string[] | null;
+  files?: string[];
+  /**
+   * Specify entry points for library.
+   * Filenames are resolved relative to `srcDir`.
+   * @default `{ '.': './index.ts' }`.
+   * */
+  entries?: Record<string, string>;
   /**
    * Specifies tsconfig that is used for typechecking
    * */
@@ -172,6 +178,7 @@ export type Plugin = {
   afterLoad?: PluginHook<AfterLoadHook>;
   beforeEmit?: PluginHook<BeforeEmitHook>;
   afterEmit?: PluginHook<AfterEmitHook>;
+  check?: PluginHook<CheckHook>;
 };
 
 export type PluginHook<T> = { order?: number; fn: T };
@@ -232,6 +239,23 @@ export type AfterEmitHookOptions = BuildHookOptions & {
 };
 
 export type AfterEmitHook = (options: AfterEmitHookOptions) => OrPromise<void>;
+
+export type CheckHookOptions = {
+  config: ResolvedConfig;
+  report: (issue: Issue) => void;
+  shouldFix: boolean;
+};
+
+export type Issue = {
+  message: string;
+  fixable: boolean;
+  filename?: string;
+  severity?: IssueSeverity;
+};
+
+export type IssueSeverity = "error" | "warning";
+
+export type CheckHook = (options: CheckHookOptions) => OrPromise<void>;
 
 export interface LogOptions {}
 export interface LogErrorOptions extends LogOptions {
