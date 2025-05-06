@@ -29,11 +29,12 @@ export function inferFileParams(
   };
 }
 
-function inferIndent(source: string): Indent | null {
+const indents = ["\t", " "] as const;
+
+export function inferIndent(source: string): Indent | null {
   const a = /^[\t ]/gm.exec(source);
   if (!a) return null;
   const lineStartIndex = a.index;
-  const indents = ["\t", " "] as const;
   for (const kind of indents) {
     if (source[lineStartIndex] === kind) {
       let i = 1;
@@ -50,7 +51,7 @@ function inferIndent(source: string): Indent | null {
   throw new Error("Unreachable");
 }
 
-function inferEol(source: string): Eol | null {
+export function inferEol(source: string): Eol | null {
   const index = source.indexOf("\n");
   if (index === -1) return null;
   if (source[index - 1] === "\r") {
@@ -66,21 +67,28 @@ export function getLineIndentCount(
 ): number {
   const { indent, eol } = fileParams;
   const lineStartIndex = getLineStart(source, index, eol);
+  const indentText = indent.kind.repeat(indent.count);
   let i = 0;
   while (
     source.slice(
       lineStartIndex + i * indent.count,
       lineStartIndex + i * indent.count + indent.count
-    ) === indent.kind.repeat(indent.count)
+    ) === indentText
   ) {
     i += 1;
   }
   return i;
 }
 
-function getLineStart(source: string, index: number, eol: string) {
-  const prevLineEndIndex = source.lastIndexOf(eol, index);
-  return prevLineEndIndex + 1;
+export function getLineStart(source: string, index: number, eol: string) {
+  if (index < eol.length) {
+    return 0;
+  }
+  const prevLineEndIndex = source.lastIndexOf(eol, index - eol.length);
+  if (prevLineEndIndex === -1) {
+    return 0;
+  }
+  return prevLineEndIndex + eol.length;
 }
 
 const lineStartRe = /^\s*$/;
