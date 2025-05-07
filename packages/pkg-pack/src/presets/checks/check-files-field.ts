@@ -1,8 +1,8 @@
 import path from "node:path";
-import { PKG_FILE, type CheckContext } from "./check-context.js";
-import { selectProp } from "./helpers";
+import { FIELD_ORDER, PKG_FILE, type CheckContext } from "./check-context.js";
+import { setOrAppendOp } from "./helpers";
 
-export function checkOutputInFiles({
+export function checkFilesField({
   config,
   report,
   shouldFix,
@@ -14,22 +14,7 @@ export function checkOutputInFiles({
   );
   if (!Array.isArray(pkg.files)) {
     if (shouldFix) {
-      updatePkg(
-        typeof pkg.files === "undefined"
-          ? {
-              kind: "objectAppend",
-              path: [],
-              afterProp: selectProp(pkg, ["type", "version"]),
-              value: {
-                files: [...expectedDirs],
-              },
-            }
-          : {
-              kind: "set",
-              path: ["files"],
-              value: [...expectedDirs],
-            }
-      );
+      updatePkg(setOrAppendOp(pkg, [], "files", expectedDirs, FIELD_ORDER));
     } else {
       const printed = JSON.stringify(expectedDirs, undefined, 2);
       report({

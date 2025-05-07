@@ -55,10 +55,10 @@ describe(checkTypesVersionsField, () => {
     );
 
     checkTypesVersionsField({ ...context, shouldFix: false });
-    expect(report).toBeCalledWith(
-      expect.objectContaining({
-        filename: "package.json",
-        message: `"typesVersions" field is expected to contain following entries:
+    expect(report).toBeCalledWith({
+      filename: "package.json",
+      fixable: true,
+      message: `"typesVersions" field is expected to contain following entries:
 {
   "*": {
     ".": [
@@ -69,8 +69,8 @@ describe(checkTypesVersionsField, () => {
     ]
   }
 }`,
-      })
-    );
+    });
+
     expect(writePkgJson).not.toBeCalled();
 
     report.mockClear();
@@ -100,8 +100,8 @@ describe(checkTypesVersionsField, () => {
   });
 
   test.each([
-    ["no typesVersions['*']", ""],
-    ["invalid typesVersions['*']", '"*": 123,\n    '],
+    ["no typesVersions star", ""],
+    ["invalid typesVersions star", '"*": 123,\n    '],
   ] as const)("%s", async (_, field) => {
     const { context, report, applyChanges } = await prepare(
       `{
@@ -119,10 +119,10 @@ describe(checkTypesVersionsField, () => {
     );
 
     checkTypesVersionsField({ ...context, shouldFix: false });
-    expect(report).toBeCalledWith(
-      expect.objectContaining({
-        filename: "package.json",
-        message: `"typesVersions" field is expected to contain following entries:
+    expect(report).toBeCalledWith({
+      filename: "package.json",
+      fixable: true,
+      message: `"typesVersions" field is expected to contain following entries:
 {
   "*": {
     ".": [
@@ -133,8 +133,8 @@ describe(checkTypesVersionsField, () => {
     ]
   }
 }`,
-      })
-    );
+    });
+
     expect(writePkgJson).not.toBeCalled();
 
     report.mockClear();
@@ -187,12 +187,12 @@ describe(checkTypesVersionsField, () => {
     );
 
     checkTypesVersionsField({ ...context, shouldFix: false });
-    expect(report).toBeCalledWith(
-      expect.objectContaining({
-        filename: "package.json",
-        message: `"another" entry in "typesVersions['*']" field is expected to be ["dist/another.d.ts"].`,
-      })
-    );
+    expect(report).toBeCalledWith({
+      filename: "package.json",
+      fixable: true,
+      message: `"another" entry in "typesVersions['*']" field is expected to be ["dist/another.d.ts"].`,
+    });
+
     expect(writePkgJson).not.toBeCalled();
 
     report.mockClear();

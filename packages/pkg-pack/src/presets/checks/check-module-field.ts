@@ -1,5 +1,5 @@
-import { PKG_FILE, type CheckContext } from "./check-context.js";
-import { getTarget, resolveEntryFile, selectProp } from "./helpers";
+import { FIELD_ORDER, PKG_FILE, type CheckContext } from "./check-context.js";
+import { getTarget, resolveEntryFile, setOrAppendOp } from "./helpers";
 
 export function checkModuleField({
   config,
@@ -20,28 +20,7 @@ export function checkModuleField({
 
   if (pkg.module !== expectedJs) {
     if (shouldFix) {
-      updatePkg(
-        typeof pkg.module !== "undefined"
-          ? {
-              kind: "set",
-              path: ["module"],
-              value: expectedJs,
-            }
-          : {
-              kind: "objectAppend",
-              path: [],
-              afterProp: selectProp(pkg, [
-                "types",
-                "main",
-                "files",
-                "type",
-                "version",
-              ]),
-              value: {
-                module: expectedJs,
-              },
-            }
-      );
+      updatePkg(setOrAppendOp(pkg, [], "module", expectedJs, FIELD_ORDER));
     } else {
       report({
         filename: PKG_FILE,

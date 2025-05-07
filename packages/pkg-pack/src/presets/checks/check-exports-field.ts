@@ -1,6 +1,11 @@
 import type { ResolvedConfig } from "../../types";
-import { PKG_FILE, type CheckContext } from "./check-context.js";
-import { getTarget, isRecord, resolveEntryFile, selectProp } from "./helpers";
+import { FIELD_ORDER, PKG_FILE, type CheckContext } from "./check-context.js";
+import {
+  getTarget,
+  isRecord,
+  resolveEntryFile,
+  setOrAppendOp,
+} from "./helpers";
 
 // https://www.typescriptlang.org/docs/handbook/modules/reference.html#packagejson-exports
 // Prefer to use "types" to improve clarity and remove unnecessary lookups
@@ -62,27 +67,7 @@ export function checkExports(
     if (!isRecord(pkg.exports)) {
       if (shouldFix) {
         updatePkg(
-          typeof pkg.exports !== "undefined"
-            ? {
-                kind: "set",
-                path: ["exports"],
-                value: expectedExports,
-              }
-            : {
-                kind: "objectAppend",
-                path: [],
-                afterProp: selectProp(pkg, [
-                  "module",
-                  "types",
-                  "main",
-                  "files",
-                  "type",
-                  "version",
-                ]),
-                value: {
-                  exports: expectedExports,
-                },
-              }
+          setOrAppendOp(pkg, [], "exports", expectedExports, FIELD_ORDER)
         );
       } else {
         const printed = JSON.stringify(expectedExports, undefined, 2);
@@ -99,21 +84,7 @@ export function checkExports(
       const currentValue = pkg.exports[entryName];
       if (!isRecord(currentValue)) {
         if (shouldFix) {
-          updatePkg(
-            typeof currentValue !== "undefined"
-              ? {
-                  kind: "set",
-                  path: ["exports", entryName],
-                  value,
-                }
-              : {
-                  kind: "objectAppend",
-                  path: ["exports"],
-                  value: {
-                    [entryName]: value,
-                  },
-                }
-          );
+          updatePkg(setOrAppendOp(pkg, ["exports"], entryName, value));
         } else {
           const printed = JSON.stringify(value, undefined, 2);
           report({
@@ -169,19 +140,7 @@ export function checkExports(
             // default fix is handled separately
             if (condition !== "default") {
               updatePkg(
-                typeof currentValue[condition] !== "undefined"
-                  ? {
-                      kind: "set",
-                      path: ["exports", entryName, condition],
-                      value: filePath,
-                    }
-                  : {
-                      kind: "objectAppend",
-                      path: ["exports", entryName],
-                      value: {
-                        [condition]: filePath,
-                      },
-                    }
+                setOrAppendOp(pkg, ["exports", entryName], condition, filePath)
               );
             }
           } else {

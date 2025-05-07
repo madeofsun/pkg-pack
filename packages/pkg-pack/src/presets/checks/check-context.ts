@@ -4,6 +4,17 @@ import { readPkgJson, writePkgJson } from "./pkg-json";
 
 export const PKG_FILE = "package.json";
 
+export const FIELD_ORDER = [
+  "version",
+  "type",
+  "main",
+  "types",
+  "module",
+  "exports",
+  "typesVersions",
+  "files",
+];
+
 export type CheckContext = CheckHookOptions & {
   pkg: JsonObject;
   updatePkg(...changes: JsonOp[]): void;

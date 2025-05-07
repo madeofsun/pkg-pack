@@ -1,5 +1,6 @@
 import path from "node:path";
 import type { ResolvedConfig } from "../../types";
+import type { JsonObject, JsonOp, JsonValue } from "../../helpers/json";
 
 export function tsToDtsExtSubstitute(fileName: string) {
   return fileName.replace(/\.(m|c)?tsx?$/, ".d.$1ts");
@@ -39,10 +40,79 @@ export function getTarget(
   return config.targets.find((t) => t.name === target)!;
 }
 
-export function selectProp(object: object, props: string[]) {
-  return props.find((prop) => prop in object);
+export function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && !!v;
 }
 
-export const isRecord = (v: unknown): v is Record<string, unknown> => {
-  return typeof v === "object" && !!v;
-};
+export function setOrAppendOp(
+  pkg: JsonObject,
+  path: string[],
+  field: string,
+  value: JsonValue,
+  fieldOrder?: string[]
+): JsonOp {
+  const obj = getAtPath(pkg, path);
+  return typeof obj[field] !== "undefined"
+    ? {
+        kind: "set",
+        path: [...path, field],
+        value: value,
+      }
+    : {
+        kind: "objectAppend",
+        path,
+        afterProp: fieldOrder
+          ? selectAfterProp(fieldOrder, obj, field)
+          : undefined,
+        value: {
+          [field]: value,
+        },
+      };
+}
+
+export function setOrPrependOp(
+  pkg: JsonObject,
+  path: string[],
+  field: string,
+  value: JsonValue,
+  fieldOrder?: string[]
+): JsonOp {
+  const obj = getAtPath(pkg, path);
+  return typeof obj[field] !== "undefined"
+    ? {
+        kind: "set",
+        path: [...path, field],
+        value: value,
+      }
+    : {
+        kind: "objectPrepend",
+        path,
+        beforeProp: fieldOrder
+          ? selectAfterProp(fieldOrder, obj, field)
+          : undefined,
+        value: {
+          [field]: value,
+        },
+      };
+}
+
+function getAtPath(obj: JsonObject, path: string[]): JsonObject {
+  let current = obj;
+
+  for (const key of path) {
+    current = current[key] as JsonObject;
+  }
+
+  return current;
+}
+
+function selectAfterProp(order: string[], object: object, currentProp: string) {
+  const currentPropIndex = order.findIndex((v) => v === currentProp);
+  if (currentPropIndex === -1) {
+    return undefined;
+  }
+  return order
+    .slice(0, currentPropIndex)
+    .reverse()
+    .find((prop) => prop in object);
+}

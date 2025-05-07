@@ -73,14 +73,11 @@ describe(checkModuleField, () => {
     );
 
     checkModuleField({ ...context, shouldFix: false });
-    expect(report).toBeCalledWith(
-      expect.objectContaining({
-        filename: "package.json",
-        fixable: true,
-        message:
-          '"module" field is expected to have value "./module/index.js".',
-      })
-    );
+    expect(report).toBeCalledWith({
+      filename: "package.json",
+      fixable: true,
+      message: '"module" field is expected to have value "./module/index.js".',
+    });
     expect(writePkgJson).not.toBeCalled();
 
     report.mockClear();

@@ -18,12 +18,12 @@ describe(checkTypeField, () => {
 }`);
 
       checkTypeFiledModule({ ...context, shouldFix: false });
-      expect(report).toBeCalledWith(
-        expect.objectContaining({
-          filename: "package.json",
-          message: '"type" field must have value "module"',
-        })
-      );
+      expect(report).toBeCalledWith({
+        filename: "package.json",
+        fixable: true,
+        message: '"type" field must have value "module"',
+      });
+
       expect(writePkgJson).not.toBeCalled();
 
       report.mockClear();
@@ -71,12 +71,12 @@ describe(checkTypeField, () => {
 }`);
 
       checkTypeFiledModule({ ...context, shouldFix: false });
-      expect(report).toBeCalledWith(
-        expect.objectContaining({
-          filename: "package.json",
-          message: '"type" field must have value "module"',
-        })
-      );
+      expect(report).toBeCalledWith({
+        filename: "package.json",
+        fixable: true,
+        message: '"type" field must have value "module"',
+      });
+
       expect(writePkgJson).not.toBeCalled();
 
       report.mockClear();
@@ -103,12 +103,12 @@ describe(checkTypeField, () => {
 }`);
 
       checkTypeFiledModule({ ...context, shouldFix: false });
-      expect(report).toBeCalledWith(
-        expect.objectContaining({
-          filename: "package.json",
-          message: '"type" field must have value "module"',
-        })
-      );
+      expect(report).toBeCalledWith({
+        filename: "package.json",
+        fixable: true,
+        message: '"type" field must have value "module"',
+      });
+
       expect(writePkgJson).not.toBeCalled();
 
       report.mockClear();

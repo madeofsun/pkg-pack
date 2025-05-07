@@ -73,12 +73,12 @@ describe(checkTypesField, () => {
     );
 
     checkTypesField({ ...context, shouldFix: false });
-    expect(report).toBeCalledWith(
-      expect.objectContaining({
-        filename: "package.json",
-        message: '"types" field is expected to have value "./dist/index.d.ts".',
-      })
-    );
+    expect(report).toBeCalledWith({
+      filename: "package.json",
+      fixable: true,
+      message: '"types" field is expected to have value "./dist/index.d.ts".',
+    });
+
     expect(writePkgJson).not.toBeCalled();
 
     report.mockClear();

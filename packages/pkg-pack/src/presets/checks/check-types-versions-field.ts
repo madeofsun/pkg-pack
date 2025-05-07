@@ -1,9 +1,10 @@
-import { PKG_FILE, type CheckContext } from "./check-context";
+import { FIELD_ORDER, PKG_FILE, type CheckContext } from "./check-context";
 import {
   getTarget,
   isRecord,
   resolveEntryFile,
-  selectProp,
+  setOrAppendOp,
+  setOrPrependOp,
   toPathSyntax,
 } from "./helpers";
 
@@ -31,42 +32,22 @@ export function checkTypesVersionsField({
     if (shouldFix) {
       if (!isRecord(pkg.typesVersions)) {
         updatePkg(
-          typeof pkg.typesVersions !== "undefined"
-            ? {
-                kind: "set",
-                path: ["typesVersions"],
-                value: expectedTypesVersions,
-              }
-            : {
-                kind: "objectAppend",
-                path: [],
-                afterProp: selectProp(pkg, [
-                  "exports",
-                  "module",
-                  "types",
-                  "main",
-                  "files",
-                  "type",
-                  "version",
-                ]),
-                value: {
-                  typesVersions: expectedTypesVersions,
-                },
-              }
+          setOrAppendOp(
+            pkg,
+            [],
+            "typesVersions",
+            expectedTypesVersions,
+            FIELD_ORDER
+          )
         );
       } else {
         updatePkg(
-          typeof pkg.typesVersions["*"] !== "undefined"
-            ? {
-                kind: "set",
-                path: ["typesVersions", "*"],
-                value: expectedTypesVersions["*"],
-              }
-            : {
-                kind: "objectPrepend",
-                path: ["typesVersions"],
-                value: expectedTypesVersions,
-              }
+          setOrPrependOp(
+            pkg,
+            ["typesVersions"],
+            "*",
+            expectedTypesVersions["*"]
+          )
         );
       }
     } else {
@@ -87,19 +68,7 @@ export function checkTypesVersionsField({
     if (!Array.isArray(currentValue) || currentValue[0] !== value) {
       if (shouldFix) {
         updatePkg(
-          typeof currentValue !== "undefined"
-            ? {
-                kind: "set",
-                path: ["typesVersions", "*", entryName],
-                value: [value],
-              }
-            : {
-                kind: "objectAppend",
-                path: ["typesVersions", "*"],
-                value: {
-                  [entryName]: [value],
-                },
-              }
+          setOrAppendOp(pkg, ["typesVersions", "*"], entryName, [value])
         );
       } else {
         report({

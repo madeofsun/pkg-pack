@@ -1,5 +1,5 @@
-import { PKG_FILE, type CheckContext } from "./check-context";
-import { getTarget, resolveEntryFile, selectProp } from "./helpers";
+import { FIELD_ORDER, PKG_FILE, type CheckContext } from "./check-context";
+import { getTarget, resolveEntryFile, setOrAppendOp } from "./helpers";
 
 export function checkTypesField({
   config,
@@ -20,24 +20,10 @@ export function checkTypesField({
     config.entries["."],
     "dts"
   );
+
   if (pkg.types !== expectedDts) {
     if (shouldFix) {
-      updatePkg(
-        typeof pkg.types !== "undefined"
-          ? {
-              kind: "set",
-              path: ["types"],
-              value: expectedDts,
-            }
-          : {
-              kind: "objectAppend",
-              path: [],
-              afterProp: selectProp(pkg, ["main", "files", "type", "version"]),
-              value: {
-                types: expectedDts,
-              },
-            }
-      );
+      updatePkg(setOrAppendOp(pkg, [], "types", expectedDts, FIELD_ORDER));
     } else {
       report({
         filename: PKG_FILE,

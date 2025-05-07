@@ -1,12 +1,12 @@
 import { describe, expect, test, vi } from "vitest";
-import { checkOutputInFiles } from "../check-files-field";
+import { checkFilesField } from "../check-files-field";
 import type { CompileTarget } from "../../../types";
 
 const { prepare, writePkgJson } = await vi.hoisted(
   () => import("./.test-helpers.js")
 );
 
-describe(checkOutputInFiles, () => {
+describe(checkFilesField, () => {
   test("no files", async () => {
     const { context, report, applyChanges } = await prepare(
       `{
@@ -19,7 +19,7 @@ describe(checkOutputInFiles, () => {
       }
     );
 
-    checkOutputInFiles({ ...context, shouldFix: false });
+    checkFilesField({ ...context, shouldFix: false });
     expect(report).toBeCalledWith({
       filename: "package.json",
       fixable: true,
@@ -31,7 +31,7 @@ describe(checkOutputInFiles, () => {
 
     report.mockClear();
 
-    checkOutputInFiles({ ...context, shouldFix: true });
+    checkFilesField({ ...context, shouldFix: true });
     await applyChanges();
 
     expect(report).not.toBeCalled();
@@ -62,7 +62,7 @@ describe(checkOutputInFiles, () => {
         }
       );
 
-      checkOutputInFiles({ ...context, shouldFix: false });
+      checkFilesField({ ...context, shouldFix: false });
       expect(report).toBeCalledWith({
         filename: "package.json",
         fixable: true,
@@ -74,7 +74,7 @@ describe(checkOutputInFiles, () => {
 
       report.mockClear();
 
-      checkOutputInFiles({ ...context, shouldFix: true });
+      checkFilesField({ ...context, shouldFix: true });
       await applyChanges();
 
       expect(report).not.toBeCalled();
@@ -104,11 +104,11 @@ describe(checkOutputInFiles, () => {
         }
       );
 
-      checkOutputInFiles({ ...context, shouldFix: false });
+      checkFilesField({ ...context, shouldFix: false });
       expect(report).not.toBeCalled();
       expect(writePkgJson).not.toBeCalled();
 
-      checkOutputInFiles({ ...context, shouldFix: true });
+      checkFilesField({ ...context, shouldFix: true });
       await applyChanges();
 
       expect(report).not.toBeCalled();
@@ -128,7 +128,7 @@ describe(checkOutputInFiles, () => {
         }
       );
 
-      checkOutputInFiles({ ...context, shouldFix: false });
+      checkFilesField({ ...context, shouldFix: false });
       expect(report).toBeCalledWith({
         filename: "package.json",
         fixable: true,
@@ -140,7 +140,7 @@ describe(checkOutputInFiles, () => {
 
       report.mockClear();
 
-      checkOutputInFiles({ ...context, shouldFix: true });
+      checkFilesField({ ...context, shouldFix: true });
       await applyChanges();
 
       expect(report).not.toBeCalled();
