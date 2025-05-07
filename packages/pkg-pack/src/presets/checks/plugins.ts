@@ -1,15 +1,15 @@
 import type { Plugin } from "../../types";
+import { prepareCheckContext } from "./check-context";
 import {
-  checkTypeField,
   checkExports,
-  checkOutputInFiles,
-  checkTypesVersions,
   cjsCompatExpectedExports,
   esmPureExpectedExports,
-  prepareCheckContext,
-  checkMainField,
-  checkTypesField,
-} from "./checks";
+} from "./check-exports-field";
+import { checkOutputInFiles } from "./check-files-field";
+import { checkMainField } from "./check-main-field";
+import { checkTypeField } from "./check-type-field";
+import { checkTypesField } from "./check-types-field";
+import { checkTypesVersionsField } from "./check-types-versions-field";
 
 export const checkEsmPure: Plugin = {
   name: "pkg-pack:check-esm-pure",
@@ -22,7 +22,7 @@ export const checkEsmPure: Plugin = {
         checkOutputInFiles,
         checkMainField,
         checkTypesField,
-        checkTypesVersions,
+        checkTypesVersionsField,
         checkExports(esmPureExpectedExports(options.config)),
       ]) {
         check(context);
@@ -44,7 +44,7 @@ export const checkCjsCompat: Plugin = {
         checkOutputInFiles,
         checkMainField,
         checkTypesField,
-        checkTypesVersions,
+        checkTypesVersionsField,
         checkExports(cjsCompatExpectedExports(options.config)),
       ]) {
         check(context);

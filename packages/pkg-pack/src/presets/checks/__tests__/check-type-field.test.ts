@@ -1,0 +1,130 @@
+import { describe, expect, test, vi } from "vitest";
+import { checkTypeField } from "../check-type-field.js";
+
+const { prepare, writePkgJson } = await vi.hoisted(
+  () => import("./.test-helpers.js")
+);
+
+describe(checkTypeField, () => {
+  const checkTypeFiledModule = checkTypeField("module");
+
+  describe("has type", () => {
+    test("commonjs", async () => {
+      const { context, report, applyChanges } = await prepare(`{
+  "name": "some",
+  "version": "0.1.0",
+  "type": "commonjs",
+  "dependencies": {}
+}`);
+
+      checkTypeFiledModule({ ...context, shouldFix: false });
+      expect(report).toBeCalledWith(
+        expect.objectContaining({
+          filename: "package.json",
+          message: '"type" field must have value "module"',
+        })
+      );
+      expect(writePkgJson).not.toBeCalled();
+
+      report.mockClear();
+
+      checkTypeFiledModule({ ...context, shouldFix: true });
+      await applyChanges();
+
+      expect(report).not.toBeCalled();
+      expect(writePkgJson).toBeCalledWith(
+        "package.json",
+        `{
+  "name": "some",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {}
+}`
+      );
+    });
+
+    test("module", async () => {
+      const { context, report, applyChanges } = await prepare(`{
+  "name": "some",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {}
+}`);
+
+      checkTypeFiledModule({ ...context, shouldFix: false });
+      expect(report).not.toBeCalled();
+      expect(writePkgJson).not.toBeCalled();
+
+      checkTypeFiledModule({ ...context, shouldFix: true });
+      await applyChanges();
+      expect(report).not.toBeCalled();
+      expect(writePkgJson).not.toBeCalled();
+    });
+  });
+
+  describe("no type", () => {
+    test("with version", async () => {
+      const { context, report, applyChanges } = await prepare(`{
+  "name": "some",
+  "version": "0.1.0",
+  "dependencies": {}
+}`);
+
+      checkTypeFiledModule({ ...context, shouldFix: false });
+      expect(report).toBeCalledWith(
+        expect.objectContaining({
+          filename: "package.json",
+          message: '"type" field must have value "module"',
+        })
+      );
+      expect(writePkgJson).not.toBeCalled();
+
+      report.mockClear();
+
+      checkTypeFiledModule({ ...context, shouldFix: true });
+      await applyChanges();
+
+      expect(report).not.toBeCalled();
+      expect(writePkgJson).toBeCalledWith(
+        "package.json",
+        `{
+  "name": "some",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {}
+}`
+      );
+    });
+
+    test("no version", async () => {
+      const { context, report, applyChanges } = await prepare(`{
+  "name": "some",
+  "dependencies": {}
+}`);
+
+      checkTypeFiledModule({ ...context, shouldFix: false });
+      expect(report).toBeCalledWith(
+        expect.objectContaining({
+          filename: "package.json",
+          message: '"type" field must have value "module"',
+        })
+      );
+      expect(writePkgJson).not.toBeCalled();
+
+      report.mockClear();
+
+      checkTypeFiledModule({ ...context, shouldFix: true });
+      await applyChanges();
+
+      expect(report).not.toBeCalled();
+      expect(writePkgJson).toBeCalledWith(
+        "package.json",
+        `{
+  "name": "some",
+  "dependencies": {},
+  "type": "module"
+}`
+      );
+    });
+  });
+});
