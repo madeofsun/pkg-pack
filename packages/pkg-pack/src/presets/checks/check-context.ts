@@ -17,7 +17,7 @@ export const FIELD_ORDER = [
 
 export type CheckContext = CheckHookOptions & {
   pkg: JsonObject;
-  updatePkg(...changes: JsonOp[]): void;
+  updatePkg(...changes: (JsonOp | JsonOp[])[]): void;
 };
 
 export async function prepareCheckContext(options: CheckHookOptions): Promise<{
@@ -34,7 +34,7 @@ export async function prepareCheckContext(options: CheckHookOptions): Promise<{
       ...options,
       pkg: pkg.value,
       updatePkg(...args) {
-        ops.push(...args);
+        ops.push(...args.flat());
       },
     },
     async applyChanges() {

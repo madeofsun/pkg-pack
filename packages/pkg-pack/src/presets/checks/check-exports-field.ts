@@ -3,6 +3,7 @@ import { FIELD_ORDER, PKG_FILE, type CheckContext } from "./check-context.js";
 import {
   getTarget,
   isRecord,
+  removeAndAppendOp,
   resolveEntryFile,
   setOrAppendOp,
 } from "./helpers";
@@ -120,20 +121,9 @@ export function checkExports(
           condition === "default" &&
           (defaultIsNotLast || currentValue[condition] !== filePath)
         ) {
-          if (typeof currentValue[condition] !== "undefined") {
-            updatePkg({
-              kind: "objectRemove",
-              path: ["exports", entryName],
-              prop: condition,
-            });
-          }
-          updatePkg({
-            kind: "objectAppend",
-            path: ["exports", entryName],
-            value: {
-              [condition]: filePath,
-            },
-          });
+          updatePkg(
+            removeAndAppendOp(pkg, ["exports", entryName], condition, filePath)
+          );
         }
         if (currentValue[condition] !== filePath) {
           if (shouldFix) {

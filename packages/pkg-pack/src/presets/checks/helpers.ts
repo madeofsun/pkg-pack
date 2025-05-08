@@ -45,14 +45,14 @@ export function isRecord(v: unknown): v is Record<string, unknown> {
 }
 
 export function setOrAppendOp(
-  pkg: JsonObject,
+  obj: JsonObject,
   path: string[],
   field: string,
   value: JsonValue,
   fieldOrder?: string[]
 ): JsonOp {
-  const obj = getAtPath(pkg, path);
-  return typeof obj[field] !== "undefined"
+  const currentObj = getAtPath(obj, path);
+  return typeof currentObj[field] !== "undefined"
     ? {
         kind: "set",
         path: [...path, field],
@@ -62,7 +62,7 @@ export function setOrAppendOp(
         kind: "objectAppend",
         path,
         afterProp: fieldOrder
-          ? selectAfterProp(fieldOrder, obj, field)
+          ? selectAfterProp(fieldOrder, currentObj, field)
           : undefined,
         value: {
           [field]: value,
@@ -71,14 +71,14 @@ export function setOrAppendOp(
 }
 
 export function setOrPrependOp(
-  pkg: JsonObject,
+  obj: JsonObject,
   path: string[],
   field: string,
   value: JsonValue,
   fieldOrder?: string[]
 ): JsonOp {
-  const obj = getAtPath(pkg, path);
-  return typeof obj[field] !== "undefined"
+  const currentObj = getAtPath(obj, path);
+  return typeof currentObj[field] !== "undefined"
     ? {
         kind: "set",
         path: [...path, field],
@@ -88,12 +88,37 @@ export function setOrPrependOp(
         kind: "objectPrepend",
         path,
         beforeProp: fieldOrder
-          ? selectAfterProp(fieldOrder, obj, field)
+          ? selectAfterProp(fieldOrder, currentObj, field)
           : undefined,
         value: {
           [field]: value,
         },
       };
+}
+
+export function removeAndAppendOp(
+  obj: JsonObject,
+  path: string[],
+  field: string,
+  value: JsonValue
+): JsonOp[] {
+  const currentObj = getAtPath(obj, path);
+  const ops: JsonOp[] = [];
+  if (typeof currentObj[field] !== "undefined") {
+    ops.push({
+      kind: "objectRemove",
+      path,
+      prop: field,
+    });
+  }
+  ops.push({
+    kind: "objectAppend",
+    path,
+    value: {
+      [field]: value,
+    },
+  });
+  return ops;
 }
 
 function getAtPath(obj: JsonObject, path: string[]): JsonObject {
