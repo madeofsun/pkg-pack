@@ -8,6 +8,7 @@ import { loadScriptPlugin } from "../plugins/load-script.js";
 import { rewriteExtensionsPlugin } from "../plugins/rewrite-extensions.js";
 import type { ModuleFormat, Plugin, Preset } from "../types";
 import { checkCjsCompat, checkEsmPure } from "./checks";
+import { fixDoubleDefaultPlugin } from "../plugins/fix-double-default.js";
 
 export function esmPurePreset(): Preset {
   return presetFactory(
@@ -44,11 +45,12 @@ export function cjsCompatPreset(): Preset {
   );
 }
 
-const extraPlugins = [
+const presetPlugins = [
   // add extension
   setHookOrder(rewriteExtensionsPlugin(), { beforeEmit: -100 }),
   // ensure that import.meta will work
   setHookOrder(fixImportMetaPlugin(), { beforeEmit: -100 }),
+  setHookOrder(fixDoubleDefaultPlugin(), { beforeEmit: -100 }),
 
   setHookOrder(loadJsonPlugin(), { load: 100, beforeEmit: -100 }),
   setHookOrder(loadScriptPlugin(), { load: 100 }),
@@ -69,7 +71,7 @@ function presetFactory(
     name: presetName,
     config: (config) => {
       config.plugins ??= [];
-      config.plugins.push(...extraPlugins, ...plugins);
+      config.plugins.push(...presetPlugins, ...plugins);
     },
     resolveTargets: ({ config, compilerOptions }) => {
       const { srcDir } = config;

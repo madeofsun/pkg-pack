@@ -65,7 +65,6 @@ export function fixImportMetaPlugin(): Plugin {
 
             // rename all identifiers that conflicts with the global ones
             for (const id of ["require", "__dirname", "__filename"] as const) {
-              let importId = 0;
               for (const { span, container } of findMemberExpressions(
                 sourceFile,
                 [id]
@@ -99,7 +98,7 @@ export function fixImportMetaPlugin(): Plugin {
                     ) {
                       const moduleSpec = container.parent.arguments[0].text;
                       const name = getNextName(
-                        `required_${importId}`,
+                        "required",
                         typeChecker,
                         container,
                         ts.SymbolFlags.Variable,

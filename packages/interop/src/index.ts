@@ -1,1 +1,1 @@
-export { getEsmDefault } from "./get-esm-default";
+export { fixDoubleDefault } from "./fix-double-default";
