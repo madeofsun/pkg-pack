@@ -173,23 +173,40 @@ function isEqualPath(a: string[], b: string[]) {
   return true;
 }
 
-export function getNextName(
+export function isGlobalVar(
   name: string,
   typeChecker: ts.TypeChecker,
-  location: ts.Node,
-  symbolFlags: ts.SymbolFlags,
-  excludeGlobals: boolean
-): string {
-  let suffix = 1;
-  while (
-    typeChecker.resolveName(
-      `${name}_${suffix}`,
-      location,
-      symbolFlags,
-      excludeGlobals
-    )
-  ) {
-    suffix += 1;
-  }
-  return `${name}_${suffix}`;
+  location: ts.Node
+) {
+  return !typeChecker.resolveName(
+    name,
+    location,
+    ts.SymbolFlags.Variable,
+    true
+  );
+}
+
+export function createNameGenerator(typeChecker: ts.TypeChecker) {
+  let nextSuffix = 1;
+  return {
+    next(
+      name: string,
+      location: ts.Node,
+      symbolFlags: ts.SymbolFlags,
+      excludeGlobals: boolean
+    ) {
+      let suffix = nextSuffix++;
+      while (
+        typeChecker.resolveName(
+          `${name}_${suffix}`,
+          location,
+          symbolFlags,
+          excludeGlobals
+        )
+      ) {
+        suffix += 1;
+      }
+      return `${name}_${suffix}`;
+    },
+  };
 }
