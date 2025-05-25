@@ -88,7 +88,7 @@ export function processFile(
   if (sourceFile.impliedNodeFormat === ts.ModuleKind.ESNext) {
     const sourceFormat = "esm";
 
-    // Check that global variables in indeed global.
+    // Check that global variables are indeed global.
     // Then handle them.
     for (const id of ["require", "__dirname", "__filename"] as const) {
       const memberExpressions = findMemberExpressions(sourceFile, [id]);
