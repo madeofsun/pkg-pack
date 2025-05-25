@@ -26,45 +26,60 @@ export function rewriteExtensionsPlugin(): Plugin {
         };
 
         for (const fileName of program.getRootFileNames()) {
-          const sourceFile: ts.SourceFile | undefined =
-            program.getSourceFile(fileName);
-          assertIsNotFalsy(sourceFile);
-
-          const refs = findModuleRefs(sourceFile);
-          const changes: TextChange[] = [];
-          for (const ref of refs) {
-            if (!ref.specifier.startsWith(".")) continue;
-
-            const resolved = resolveFile(
-              ref.specifier,
-              fileName,
-              fileExists,
-              logger
-            );
-            if (!resolved) {
-              continue;
-            }
-            const normalized = normalizeToJs(resolved);
-            if (normalized === ref.specifier) continue;
-            changes.push({
-              span: ref.span,
-              newText: normalized,
-            });
-          }
-          if (changes.length > 0) {
-            const newText = editText(sourceFile.text, changes);
+          const newText = processFile(fileName, {
+            program,
+            logger,
+            fileExists,
+          });
+          newText &&
             updates.push({
               kind: "source",
-              srcPath: sourceFile.fileName,
+              srcPath: fileName,
               text: newText,
             });
-          }
         }
 
         updateFiles(updates);
       },
     },
   };
+}
+
+export function processFile(
+  fileName: string,
+  {
+    program,
+    logger,
+    fileExists,
+  }: {
+    program: ts.Program;
+    logger: Logger;
+    fileExists: (filePath: string) => boolean;
+  }
+): string | undefined {
+  const sourceFile: ts.SourceFile | undefined =
+    program.getSourceFile(fileName)!;
+
+  const refs = findModuleRefs(sourceFile);
+  const changes: TextChange[] = [];
+  for (const ref of refs) {
+    if (!ref.specifier.startsWith(".")) continue;
+
+    const resolved = resolveFile(ref.specifier, fileName, fileExists, logger);
+    if (!resolved) {
+      continue;
+    }
+    const normalized = normalizeToJs(resolved);
+    if (normalized === ref.specifier) continue;
+    changes.push({
+      span: ref.span,
+      newText: normalized,
+    });
+  }
+
+  if (changes.length === 0) return;
+
+  return editText(sourceFile.text, changes);
 }
 
 // ts does not auto-resolve (c|m) modifiers
@@ -124,7 +139,7 @@ function resolveFile(
 
 function normalizeToJs(input: string) {
   // final build will not have .jsx extension, it must be rewritten
-  return input.replace(/\.(m|c)?ts(x)?$/, ".$1js");
+  return input.replace(/\.(m|c)?(t|j)sx?$/, ".$1js");
 }
 
 function fallbackToTs(input: string) {

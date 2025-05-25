@@ -78,7 +78,7 @@ export function processFile(
     srcDir: string;
     addHelper: (helper: LoadedFile) => void;
   }
-) {
+): string | undefined {
   const sourceFile: ts.SourceFile = program.getSourceFile(fileName)!;
 
   const refs = findModuleRefs(sourceFile);
