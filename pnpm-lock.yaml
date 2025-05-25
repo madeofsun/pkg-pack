@@ -159,10 +159,10 @@ importers:
       commander:
         specifier: ^14.0.0
         version: 14.0.0
-    devDependencies:
       jiti:
-        specifier: ^2.4.2
+        specifier: ^2.0.0
         version: 2.4.2
+    devDependencies:
       typescript:
         specifier: ~5.4.5
         version: 5.4.5

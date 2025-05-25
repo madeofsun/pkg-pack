@@ -27,14 +27,14 @@
   },
   "dependencies": {
     "commander": "^14.0.0",
-    "@commander-js/extra-typings": "^14.0.0"
+    "@commander-js/extra-typings": "^14.0.0",
+    "jiti": "^2.0.0"
   },
   "devDependencies": {
     "jiti": "^2.4.2",
     "typescript": "~5.4.5"
   },
   "peerDependencies": {
-    "jiti": "^2.0.0",
     "typescript": ">=5.4.5"
   },
   "engines": {
