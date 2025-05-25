@@ -1,24 +1,19 @@
 #!/usr/bin/env node
 
-// @ts-ignore
 import pkg from "../../package.json";
 
-import { defineCommand, runMain } from "citty";
-import build from "./build.js";
-import check from "./check.js";
+import { program } from "@commander-js/extra-typings";
+
+import { defineBuildCommand } from "./build.js";
+import { defineCheckCommand } from "./check.js";
 
 const { name, version, description } = pkg;
 
-const main = defineCommand({
-  meta: {
-    name,
-    version,
-    description,
-  },
-  subCommands: {
-    build,
-    check,
-  },
-});
+program.name(name);
+program.version(version);
+program.description(description);
 
-runMain(main);
+defineBuildCommand(program);
+defineCheckCommand(program.command("check"));
+
+program.parse();
