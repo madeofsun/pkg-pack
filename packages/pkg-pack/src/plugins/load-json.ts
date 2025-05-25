@@ -5,6 +5,10 @@ import { editText, type TextChange } from "../helpers/edit-text.js";
 import { assertIsNotFalsy } from "../helpers/assert.js";
 import ts from "typescript";
 
+/**
+ * Allows to use JSON imports.
+ * Performs fixes for JSON imports in ESM context.
+ */
 export function loadJsonPlugin(): Plugin {
   return {
     name: "pkg-pack:load-json",
@@ -33,77 +37,97 @@ export function loadJsonPlugin(): Plugin {
         const program = languageService.getProgram();
         assertIsNotFalsy(program);
 
-        const updates: LoadedFile[] = [];
-
         const newFiles = new Set<string>();
 
+        const updates: LoadedFile[] = [];
+
         for (const fileName of program.getRootFileNames()) {
-          const sourceFile: ts.SourceFile | undefined =
-            program.getSourceFile(fileName);
-          assertIsNotFalsy(sourceFile);
-
-          const refs = findModuleRefs(sourceFile);
-          const changes: TextChange[] = [];
-          for (const ref of refs) {
-            if (
-              !ref.specifier.startsWith(".") ||
-              !ref.specifier.endsWith(".json") ||
-              ref.kind === "require-static"
-            ) {
-              continue;
-            }
-
-            const { newSpec, helper } = resolveJsonFile(
-              fileName,
-              ref.specifier,
-              srcDir
-            );
-
-            if (!newFiles.has(helper.srcPath)) {
-              newFiles.add(helper.srcPath);
-              updates.push({
-                kind: "source",
-                srcPath: helper.srcPath,
-                text: `import data = require('${helper.requirePath}'); export = data;\n`,
-              });
-            }
-
-            // remove import attributes since they cause ts 2823
-            if (
-              (ts.isImportDeclaration(ref.container) ||
-                ts.isExportDeclaration(ref.container)) &&
-              ref.container.attributes
-            ) {
-              changes.push({
-                span: {
-                  start: ref.container.attributes.getFullStart(),
-                  length: ref.container.attributes.getFullWidth(),
-                },
-                newText: "",
-              });
-            }
-
-            changes.push({
-              span: ref.span,
-              newText: newSpec,
-            });
-          }
-
-          if (changes.length === 0) continue;
-
-          const newText = editText(sourceFile.text, changes);
-
-          updates.push({
-            kind: "source",
-            srcPath: sourceFile.fileName,
-            text: newText,
+          const newText = processFile(fileName, {
+            program,
+            srcDir,
+            addHelper: (helper) => {
+              if (!newFiles.has(helper.srcPath)) {
+                newFiles.add(helper.srcPath);
+                updates.push(helper);
+              }
+            },
           });
+
+          newText &&
+            updates.push({
+              kind: "source",
+              srcPath: fileName,
+              text: newText,
+            });
         }
 
         updateFiles(updates);
       },
     },
   };
+}
+
+export function processFile(
+  fileName: string,
+  {
+    program,
+    srcDir,
+    addHelper,
+  }: {
+    program: ts.Program;
+    srcDir: string;
+    addHelper: (helper: LoadedFile) => void;
+  }
+) {
+  const sourceFile: ts.SourceFile = program.getSourceFile(fileName)!;
+
+  const refs = findModuleRefs(sourceFile);
+  const changes: TextChange[] = [];
+  for (const ref of refs) {
+    if (
+      !ref.specifier.startsWith(".") ||
+      !ref.specifier.endsWith(".json") ||
+      ref.kind === "require-static"
+    ) {
+      continue;
+    }
+
+    const { newSpec, helper } = resolveJsonFile(
+      fileName,
+      ref.specifier,
+      srcDir
+    );
+
+    addHelper({
+      kind: "source",
+      srcPath: helper.srcPath,
+      text: `import data = require('${helper.requirePath}'); export = data;\n`,
+    });
+
+    // remove import attributes since they cause ts 2823
+    if (
+      (ts.isImportDeclaration(ref.container) ||
+        ts.isExportDeclaration(ref.container)) &&
+      ref.container.attributes
+    ) {
+      changes.push({
+        span: {
+          start: ref.container.attributes.getFullStart(),
+          length: ref.container.attributes.getFullWidth(),
+        },
+        newText: "",
+      });
+    }
+
+    changes.push({
+      span: ref.span,
+      newText: newSpec,
+    });
+  }
+
+  if (changes.length === 0) return;
+
+  return editText(sourceFile.text, changes);
 }
 
 function resolveJsonFile(fileName: string, jsonSpec: string, srcDir: string) {
