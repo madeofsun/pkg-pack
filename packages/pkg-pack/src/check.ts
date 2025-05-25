@@ -67,7 +67,9 @@ export function formatIssues(issues: Issue[]) {
     !!errors && f.bold(`${f.red("Total errors")}: ${errors}`),
     !!warnings && f.bold(`${f.yellow("Total warnings")}: ${warnings}`),
     !!fixable &&
-      `Run ${f.cyan("`pkg-pack check --fix`")} to resolve fixable problems.`,
+      `Run ${f.cyan(
+        "`pkg-pack check --fix`"
+      )} to resolve fixable problems (${f.bold(fixable.toString())}).`,
   ]
     .filter((v) => v !== false)
     .join("\n");

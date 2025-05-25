@@ -81,13 +81,13 @@ export function checkExports(
       return;
     }
 
-    for (const [entryName, value] of Object.entries(expectedExports)) {
+    for (const [entryName, expectedValue] of Object.entries(expectedExports)) {
       const currentValue = pkg.exports[entryName];
       if (!isRecord(currentValue)) {
         if (shouldFix) {
-          updatePkg(setOrAppendOp(pkg, ["exports"], entryName, value));
+          updatePkg(setOrAppendOp(pkg, ["exports"], entryName, expectedValue));
         } else {
-          const printed = JSON.stringify(value, undefined, 2);
+          const printed = JSON.stringify(expectedValue, undefined, 2);
           report({
             filename: PKG_FILE,
             message: `"${entryName}" entry in "exports" field is expected to contain following conditions:\n${printed}`,
@@ -96,14 +96,14 @@ export function checkExports(
         }
         continue;
       }
-      let defaultIsNotLast;
+      let shouldUpdateValue = false;
       if ("default" in currentValue) {
         const allCurrentConditions = Object.keys(currentValue);
         if (
           allCurrentConditions[allCurrentConditions.length - 1] !== "default"
         ) {
           if (shouldFix) {
-            defaultIsNotLast = true;
+            shouldUpdateValue = true;
           } else {
             report({
               filename: PKG_FILE,
@@ -113,26 +113,10 @@ export function checkExports(
           }
         }
       }
-      for (const [condition, filePath] of Object.entries(value)) {
-        // default will be on the last iteration
-        // make sure it is the last one
-        if (
-          shouldFix &&
-          condition === "default" &&
-          (defaultIsNotLast || currentValue[condition] !== filePath)
-        ) {
-          updatePkg(
-            removeAndAppendOp(pkg, ["exports", entryName], condition, filePath)
-          );
-        }
+      for (const [condition, filePath] of Object.entries(expectedValue)) {
         if (currentValue[condition] !== filePath) {
           if (shouldFix) {
-            // default fix is handled separately
-            if (condition !== "default") {
-              updatePkg(
-                setOrAppendOp(pkg, ["exports", entryName], condition, filePath)
-              );
-            }
+            shouldUpdateValue = true;
           } else {
             report({
               filename: PKG_FILE,
@@ -141,6 +125,9 @@ export function checkExports(
             });
           }
         }
+      }
+      if (shouldUpdateValue) {
+        updatePkg(setOrAppendOp(pkg, ["exports"], entryName, expectedValue));
       }
     }
   };

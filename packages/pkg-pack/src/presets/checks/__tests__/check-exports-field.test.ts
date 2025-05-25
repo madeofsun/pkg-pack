@@ -399,8 +399,69 @@ describe(checkExports, () => {
   "version": "0.1.0",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "module": "./module/index.js",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {}
+}`
+    );
+  });
+
+  test("types is missing", async () => {
+    const { context, report, applyChanges } = await prepare(
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "exports": {
+    ".": {
+      "module": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {}
+}`,
+      {
+        entries: { ".": "./index.ts" },
+        targets: [
+          { name: "default", outDir: "dist" } as CompileTarget,
+          { name: "module", outDir: "module" } as CompileTarget,
+        ],
+      }
+    );
+
+    checkExports(cjsCompatExpectedExports(context.config))({
+      ...context,
+      shouldFix: false,
+    });
+    expect(report).toBeCalledTimes(2);
+    expect(report).toBeCalledWith({
+      filename: "package.json",
+      fixable: true,
+      message: `"types" condition of "." entry in "exports" field is expected to be "./dist/index.d.ts".`,
+    });
+    expect(writePkgJson).not.toBeCalled();
+
+    report.mockClear();
+
+    checkExports(cjsCompatExpectedExports(context.config))({
+      ...context,
+      shouldFix: true,
+    });
+    await applyChanges();
+
+    expect(report).not.toBeCalled();
+    expect(writePkgJson).toBeCalledTimes(1);
+    expect(writePkgJson).toBeCalledWith(
+      "package.json",
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "exports": {
+    ".": {
+      "module": "./module/index.js",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },

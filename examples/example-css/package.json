@@ -1,6 +1,7 @@
 {
   "name": "example-css",
   "main": "./dist/index.js",
+  "type": "commonjs",
   "module": "./module/index.js",
   "exports": {
     ".": {
@@ -13,7 +14,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "pkg-pack build"
+    "build": "pkg-pack build",
+    "check": "pkg-pack check"
   },
   "devDependencies": {
     "@types/node": "^22",

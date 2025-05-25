@@ -14,6 +14,6 @@ program.version(version);
 program.description(description);
 
 defineBuildCommand(program);
-defineCheckCommand(program.command("check"));
+defineCheckCommand(program);
 
 program.parse();

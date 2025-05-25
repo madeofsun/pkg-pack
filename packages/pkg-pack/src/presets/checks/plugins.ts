@@ -11,29 +11,6 @@ import { checkTypeField } from "./check-type-field";
 import { checkTypesField } from "./check-types-field";
 import { checkTypesVersionsField } from "./check-types-versions-field";
 
-async function runCheck(
-  options: CheckHookOptions,
-  kind: "esm-pure" | "cjs-compat"
-) {
-  const { context, applyChanges } = await prepareCheckContext(options);
-
-  /* must match FIELD_ORDER */ FIELD_ORDER;
-  for (const check of [
-    checkTypeField("module"),
-    checkMainField,
-    checkTypesField,
-    kind === "esm-pure" && checkExports(esmPureExpectedExports(options.config)),
-    kind === "cjs-compat" &&
-      checkExports(cjsCompatExpectedExports(options.config)),
-    checkTypesVersionsField,
-    checkFilesField,
-  ]) {
-    check && check(context);
-  }
-
-  await applyChanges();
-}
-
 export const checkEsmPure: Plugin = {
   name: "pkg-pack:check-esm-pure",
   check: {
@@ -51,3 +28,26 @@ export const checkCjsCompat: Plugin = {
     },
   },
 };
+
+async function runCheck(
+  options: CheckHookOptions,
+  kind: "esm-pure" | "cjs-compat"
+) {
+  const { context, applyChanges } = await prepareCheckContext(options);
+
+  /* must match FIELD_ORDER */ FIELD_ORDER;
+  for (const check of [
+    checkTypeField(kind === "esm-pure" ? "module" : "commonjs"),
+    checkMainField,
+    checkTypesField,
+    kind === "esm-pure" && checkExports(esmPureExpectedExports(options.config)),
+    kind === "cjs-compat" &&
+      checkExports(cjsCompatExpectedExports(options.config)),
+    checkTypesVersionsField,
+    checkFilesField,
+  ]) {
+    check && check(context);
+  }
+
+  await applyChanges();
+}
