@@ -5,6 +5,7 @@ import { readPkgJson, writePkgJson } from "./pkg-json";
 export const PKG_FILE = "package.json";
 
 export const FIELD_ORDER = [
+  "name",
   "version",
   "type",
   "main",

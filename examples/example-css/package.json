@@ -1,12 +1,21 @@
 {
   "name": "example-css",
-  "main": "./dist/index.js",
   "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "module": "./module/index.js",
   "exports": {
     ".": {
       "module": "./module/index.js",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      ".": [
+        "dist/index.d.ts"
+      ]
     }
   },
   "files": [

@@ -15,7 +15,9 @@ export function defineCheckCommand(program: Command) {
 
       const issues = await check(userConfig, fix, writeToStdout);
 
-      writeToStdout(formatIssues(issues));
+      if (issues.length) {
+        writeToStdout(formatIssues(issues));
+      }
 
       const hasErrors = issues.some(
         ({ severity }) => !severity || severity === "error"

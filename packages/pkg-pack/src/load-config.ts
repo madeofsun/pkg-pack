@@ -27,7 +27,7 @@ export async function loadConfig(
     }
     resolvedPath = path.resolve(found);
   }
-  // recent node versions can load ts files
+  // TODO validation
   return await jiti
     .import<{ default: UserConfig }>(resolvedPath)
     .then((module) => module?.default ?? module);

@@ -49,6 +49,8 @@ function createCheckHook(
 }
 
 export function formatIssues(issues: Issue[]) {
+  if (issues.length === 0) return "";
+
   let warnings = 0;
   let errors = 0;
   for (const { severity } of issues) {
