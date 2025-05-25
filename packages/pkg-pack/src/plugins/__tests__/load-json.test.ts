@@ -59,6 +59,16 @@ describe("load-json", () => {
     );
 
     test(
+      "static import with attributes",
+      withParams(
+        "src/index.mts",
+        `import json from '${src}' with { type: 'json' }`,
+        `import json from '${srcExpected}'`,
+        helper
+      )
+    );
+
+    test(
       "dynamic import",
       withParams(
         "src/index.mts",
@@ -73,6 +83,16 @@ describe("load-json", () => {
       withParams(
         "src/index.mts",
         `export * from '${src}'`,
+        `export * from '${srcExpected}'`,
+        helper
+      )
+    );
+
+    test(
+      "static export with attributes",
+      withParams(
+        "src/index.mts",
+        `export * from '${src}' with { type: 'json' }`,
         `export * from '${srcExpected}'`,
         helper
       )
