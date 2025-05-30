@@ -96,31 +96,6 @@ export function setOrPrependOp(
       };
 }
 
-export function removeAndAppendOp(
-  obj: JsonObject,
-  path: string[],
-  field: string,
-  value: JsonValue
-): JsonOp[] {
-  const currentObj = getAtPath(obj, path);
-  const ops: JsonOp[] = [];
-  if (typeof currentObj[field] !== "undefined") {
-    ops.push({
-      kind: "objectRemove",
-      path,
-      prop: field,
-    });
-  }
-  ops.push({
-    kind: "objectAppend",
-    path,
-    value: {
-      [field]: value,
-    },
-  });
-  return ops;
-}
-
 function getAtPath(obj: JsonObject, path: string[]): JsonObject {
   let current = obj;
 

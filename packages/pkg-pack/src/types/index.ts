@@ -93,6 +93,7 @@ export type CompileTarget = {
   name: string;
   /**
    * Directory that will contain output files.
+   * Relative to current directory.
    * */
   outDir: string;
   /**

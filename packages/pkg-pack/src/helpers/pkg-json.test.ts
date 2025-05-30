@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { readPkgJson, writePkgJson } from "../pkg-json.js";
+import { readPkgJson, writePkgJson } from "./pkg-json";
 
 vi.mock("node:fs", () => {
   return {

@@ -3,15 +3,14 @@ import path from "node:path";
 import {
   editText,
   findModuleRefs,
-  type CompileTarget,
   type LoadedFile,
   type Plugin,
   type TextChange,
 } from "pkg-pack";
+import { checkImports, prepareCheckContext } from "./check";
+import { getImportPrefix } from "./common";
 
 const cssModuleRE = /(.*)\.module\.css$/;
-
-const getCssId = (target: CompileTarget) => `#css_${target.name}`;
 
 export function cssModulesPlugin(): Plugin {
   return {
@@ -64,7 +63,7 @@ export function cssModulesPlugin(): Plugin {
         const relativeCssFileName = file.srcPath
           .replace(cssModuleRE, "$1.css")
           .replace(srcDir, "");
-        const importSource = `${getCssId(target)}${relativeCssFileName}`;
+        const importSource = `${getImportPrefix(target)}${relativeCssFileName}`;
         const cssFileName = `${srcDir}/#css${relativeCssFileName}`;
 
         const importCss = `import "${importSource}";`;
@@ -106,7 +105,7 @@ export function cssModulesPlugin(): Plugin {
           for (const ref of refs) {
             if (
               !ref.specifier.startsWith(".") ||
-              !ref.specifier.match(cssModuleRE)
+              !cssModuleRE.test(ref.specifier)
             ) {
               continue;
             }
@@ -150,6 +149,15 @@ export function cssModulesPlugin(): Plugin {
           distPath,
           text: "\n",
         });
+      },
+    },
+    check: {
+      async fn(options) {
+        const { context, applyChanges } = await prepareCheckContext(options);
+
+        checkImports(context);
+
+        await applyChanges();
       },
     },
   };

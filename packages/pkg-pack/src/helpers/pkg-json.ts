@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { type JsonObject } from "../../helpers/json";
+import { type JsonObject } from "./json";
 
 export async function readPkgJson(filename: string): Promise<{
   source: string;

@@ -1,6 +1,6 @@
-import path from "node:path";
 import { FIELD_ORDER, PKG_FILE, type CheckContext } from "./check-context.js";
 import { setOrAppendOp } from "./helpers";
+import { resolveOutput } from "../../helpers/resolve-output.js";
 
 export function checkFilesField({
   config,
@@ -9,9 +9,8 @@ export function checkFilesField({
   pkg,
   updatePkg,
 }: CheckContext) {
-  const expectedDirs = config.targets.map((t) =>
-    path.relative(process.cwd(), path.resolve(t.outDir))
-  );
+  const expectedDirs = config.targets.map((t) => resolveOutput(t.outDir));
+
   if (!Array.isArray(pkg.files)) {
     if (shouldFix) {
       updatePkg(setOrAppendOp(pkg, [], "files", expectedDirs, FIELD_ORDER));

@@ -74,11 +74,12 @@ function presetFactory(
     resolveTargets: ({ config, compilerOptions }) => {
       const { srcDir } = config;
 
-      return targets.map(({ name, outDir, format, declaration }) => {
+      return targets.map(({ name, outDir: _outDir, format, declaration }) => {
+        const outDir = path.join(path.dirname(srcDir), _outDir);
         return {
           name,
           format,
-          outDir: path.resolve(outDir),
+          outDir,
           compilerOptions: getCompilerOptions(
             presetName,
             compilerOptions,
@@ -103,7 +104,7 @@ function getCompilerOptions(
 ) {
   compilerOptions = structuredClone(compilerOptions);
 
-  compilerOptions.outDir = path.join(path.dirname(srcDir), outDir);
+  compilerOptions.outDir = outDir;
 
   compilerOptions.rootDir = srcDir;
 

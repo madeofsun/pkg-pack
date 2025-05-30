@@ -1,7 +1,6 @@
 import path from "node:path";
 import fs from "node:fs";
 import type { LoadedFile, Logger, Plugin } from "../types/index.js";
-import { assertIsNotFalsy } from "../helpers/assert.js";
 import { findModuleRefs } from "../helpers/ast.js";
 import { editText, type TextChange } from "../helpers/edit-text.js";
 import type ts from "typescript";
@@ -13,8 +12,7 @@ export function rewriteExtensionsPlugin(): Plugin {
     name: "pkg-pack:rewrite-extensions",
     beforeEmit: {
       fn({ languageService, updateFiles, hasFile, srcDir }) {
-        const program = languageService.getProgram();
-        assertIsNotFalsy(program);
+        const program = languageService.getProgram()!;
 
         const updates: LoadedFile[] = [];
 

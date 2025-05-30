@@ -1,11 +1,12 @@
 import { vi } from "vitest";
-import type { ResolvedConfig } from "../../../types/index.js";
+import type { ResolvedConfig } from "pkg-pack";
 
 const readPkgJson = vi.fn();
 const writePkgJson = vi.fn();
 
-vi.doMock("../../../helpers/pkg-json.js", async () => {
+vi.doMock("pkg-pack", async () => {
   return {
+    ...(await vi.importActual("pkg-pack")),
     get readPkgJson() {
       return readPkgJson;
     },
@@ -19,7 +20,7 @@ const prepare = async (
   pkgContent: string,
   config?: Partial<ResolvedConfig>
 ) => {
-  const { prepareCheckContext } = await import("../check-context.js");
+  const { prepareCheckContext } = await import("../check.js");
 
   readPkgJson.mockClear();
   readPkgJson.mockResolvedValue({

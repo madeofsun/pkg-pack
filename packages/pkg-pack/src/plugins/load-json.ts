@@ -2,7 +2,6 @@ import path from "node:path";
 import { findModuleRefs } from "../helpers/ast.js";
 import type { LoadedFile, Plugin } from "../types/index.js";
 import { editText, type TextChange } from "../helpers/edit-text.js";
-import { assertIsNotFalsy } from "../helpers/assert.js";
 import ts from "typescript";
 
 /**
@@ -34,8 +33,7 @@ export function loadJsonPlugin(): Plugin {
     },
     beforeEmit: {
       async fn({ languageService, updateFiles, srcDir }) {
-        const program = languageService.getProgram();
-        assertIsNotFalsy(program);
+        const program = languageService.getProgram()!;
 
         const newFiles = new Set<string>();
 

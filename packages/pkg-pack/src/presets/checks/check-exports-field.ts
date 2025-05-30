@@ -3,7 +3,6 @@ import { FIELD_ORDER, PKG_FILE, type CheckContext } from "./check-context.js";
 import {
   getTarget,
   isRecord,
-  removeAndAppendOp,
   resolveEntryFile,
   setOrAppendOp,
 } from "./helpers";

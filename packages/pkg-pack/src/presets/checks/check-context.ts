@@ -1,6 +1,6 @@
 import { editJson, type JsonObject, type JsonOp } from "../../helpers/json";
 import type { CheckHookOptions } from "../../types";
-import { readPkgJson, writePkgJson } from "./pkg-json";
+import { readPkgJson, writePkgJson } from "../../helpers/pkg-json";
 
 export const PKG_FILE = "package.json";
 
