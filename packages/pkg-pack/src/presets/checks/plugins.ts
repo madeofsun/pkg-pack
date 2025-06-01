@@ -7,6 +7,7 @@ import {
 } from "./check-exports-field";
 import { checkFilesField } from "./check-files-field";
 import { checkMainField } from "./check-main-field";
+import { checkModuleField } from "./check-module-field";
 import { checkTypeField } from "./check-type-field";
 import { checkTypesField } from "./check-types-field";
 import { checkTypesVersionsField } from "./check-types-versions-field";
@@ -39,6 +40,7 @@ async function runCheck(
   for (const check of [
     checkTypeField(kind === "esm-pure" ? "module" : "commonjs"),
     checkMainField,
+    kind === "cjs-compat" && checkModuleField,
     checkTypesField,
     kind === "esm-pure" && checkExports(esmPureExpectedExports(options.config)),
     kind === "cjs-compat" &&

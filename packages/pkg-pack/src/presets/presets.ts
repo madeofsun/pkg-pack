@@ -20,7 +20,7 @@ export function esmPurePreset(): Preset {
         declaration: true,
       },
     ],
-    [checkEsmPure]
+    [setHookOrder(checkEsmPure, { check: -100 })]
   );
 }
 
@@ -40,7 +40,7 @@ export function cjsCompatPreset(): Preset {
         format: "esm",
       },
     ],
-    [checkCjsCompat]
+    [setHookOrder(checkCjsCompat, { check: -100 })]
   );
 }
 
