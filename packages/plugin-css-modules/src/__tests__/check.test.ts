@@ -57,19 +57,74 @@ describe(checkImports, () => {
 
     checkImports({
       ...context,
-      shouldFix: false,
+      mode: "check",
     });
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
 
     checkImports({
       ...context,
-      shouldFix: true,
+      mode: "fix",
     });
     await applyChanges();
 
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
+  });
+
+  test("reset", async () => {
+    const { context, report, applyChanges } = await prepare(
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "files": ["dist", "module"],
+  "imports": {
+    "#css/*.css": {
+      "browser": "./dist/#css/*.css",
+      "default": "./dist/#css/fallback.js"
+    },
+    "#css_module/*.css": {
+      "browser": "./module/#css/*.css",
+      "default": "./module/#css/fallback.js"
+    }
+  },
+  "dependencies": {}
+}`,
+      {
+        entries: { ".": "./index.ts" },
+        targets: [
+          { name: "default", outDir: "dist" } as CompileTarget,
+          { name: "module", outDir: "module" } as CompileTarget,
+        ],
+      }
+    );
+
+    checkImports({
+      ...context,
+      mode: "reset",
+    });
+    await applyChanges();
+
+    expect(report).not.toBeCalled();
+    expect(writePkgJson).toBeCalledWith(
+      "package.json",
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "files": ["dist", "module"],
+  "imports": {
+    "#css/*.css": {
+      "browser": "./dist/#css/*.css",
+      "default": "./dist/#css/fallback.js"
+    },
+    "#css_module/*.css": {
+      "browser": "./module/#css/*.css",
+      "default": "./module/#css/fallback.js"
+    }
+  },
+  "dependencies": {}
+}`
+    );
   });
 
   test.each([
@@ -94,7 +149,7 @@ describe(checkImports, () => {
 
     checkImports({
       ...context,
-      shouldFix: false,
+      mode: "check",
     });
     expect(report).toBeCalledWith({
       filename: "package.json",
@@ -117,7 +172,7 @@ describe(checkImports, () => {
 
     checkImports({
       ...context,
-      shouldFix: true,
+      mode: "fix",
     });
     await applyChanges();
 
@@ -170,7 +225,7 @@ describe(checkImports, () => {
 
     checkImports({
       ...context,
-      shouldFix: false,
+      mode: "check",
     });
     expect(report).toBeCalledWith({
       filename: "package.json",
@@ -187,7 +242,7 @@ describe(checkImports, () => {
 
     checkImports({
       ...context,
-      shouldFix: true,
+      mode: "fix",
     });
     await applyChanges();
 
@@ -235,7 +290,7 @@ describe(checkImports, () => {
 
     checkImports({
       ...context,
-      shouldFix: false,
+      mode: "check",
     });
     expect(report).toBeCalledWith({
       filename: "package.json",
@@ -253,7 +308,7 @@ describe(checkImports, () => {
 
     checkImports({
       ...context,
-      shouldFix: true,
+      mode: "fix",
     });
     await applyChanges();
 

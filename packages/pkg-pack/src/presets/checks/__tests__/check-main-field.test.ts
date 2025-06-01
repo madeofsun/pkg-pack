@@ -21,11 +21,32 @@ describe(checkMainField, () => {
       }
     );
 
-    checkMainField({ ...context, shouldFix: false });
+    checkMainField({ ...context, mode: "check" });
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
 
-    checkMainField({ ...context, shouldFix: true });
+    checkMainField({ ...context, mode: "fix" });
+    await applyChanges();
+
+    expect(report).not.toBeCalled();
+    expect(writePkgJson).not.toBeCalled();
+  });
+
+  test("reset", async () => {
+    const { context, report, applyChanges } = await prepare(
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "main": "./dist/index.js",
+  "dependencies": {}
+}`,
+      {
+        entries: {},
+        targets: [{ name: "default", outDir: "dist" } as CompileTarget],
+      }
+    );
+
+    checkMainField({ ...context, mode: "reset" });
     await applyChanges();
 
     expect(report).not.toBeCalled();
@@ -45,11 +66,11 @@ describe(checkMainField, () => {
       }
     );
 
-    checkMainField({ ...context, shouldFix: false });
+    checkMainField({ ...context, mode: "check" });
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
 
-    checkMainField({ ...context, shouldFix: true });
+    checkMainField({ ...context, mode: "fix" });
     await applyChanges();
 
     expect(report).not.toBeCalled();
@@ -72,7 +93,7 @@ describe(checkMainField, () => {
       }
     );
 
-    checkMainField({ ...context, shouldFix: false });
+    checkMainField({ ...context, mode: "check" });
     expect(report).toBeCalledWith({
       filename: "package.json",
       fixable: true,
@@ -82,7 +103,7 @@ describe(checkMainField, () => {
 
     report.mockClear();
 
-    checkMainField({ ...context, shouldFix: true });
+    checkMainField({ ...context, mode: "fix" });
     await applyChanges();
 
     expect(report).not.toBeCalled();

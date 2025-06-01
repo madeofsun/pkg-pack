@@ -5,15 +5,23 @@ import { resolveOutput } from "../../helpers/resolve-output.js";
 export function checkFilesField({
   config,
   report,
-  shouldFix,
+  mode,
   pkg,
   updatePkg,
 }: CheckContext) {
   const expectedDirs = config.targets.map((t) => resolveOutput(t.outDir));
 
+  const reset = () =>
+    updatePkg(setOrAppendOp(pkg, [], "files", expectedDirs, FIELD_ORDER));
+
+  if (mode === "reset") {
+    reset();
+    return;
+  }
+
   if (!Array.isArray(pkg.files)) {
-    if (shouldFix) {
-      updatePkg(setOrAppendOp(pkg, [], "files", expectedDirs, FIELD_ORDER));
+    if (mode === "fix") {
+      reset();
     } else {
       const printed = JSON.stringify(expectedDirs, undefined, 2);
       report({
@@ -31,7 +39,7 @@ export function checkFilesField({
     }
   }
   if (missingDirs.length > 0) {
-    if (shouldFix) {
+    if (mode === "fix") {
       updatePkg({
         kind: "set",
         path: ["files"],

@@ -9,11 +9,16 @@ export function defineCheckCommand(program: Command) {
   program
     .command("check")
     .addOption(COMMON_ARGS.config)
-    .addOption(new Option("--fix", "Try to fix fixable issues."))
-    .action(async ({ config: configPath, fix = false }) => {
+    .addOption(new Option("--fix", "Fix fixable issues."))
+    .addOption(new Option("--reset", "Force fixes to run."))
+    .action(async ({ config: configPath, fix, reset }) => {
       const userConfig = await loadConfig(configPath);
 
-      const issues = await check(userConfig, fix, writeToStdout);
+      const issues = await check(
+        userConfig,
+        reset ? "reset" : fix ? "fix" : "check",
+        writeToStdout
+      );
 
       if (issues.length) {
         writeToStdout(formatIssues(issues));

@@ -21,15 +21,45 @@ describe(checkTypesField, () => {
       }
     );
 
-    checkTypesField({ ...context, shouldFix: false });
+    checkTypesField({ ...context, mode: "check" });
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
 
-    checkTypesField({ ...context, shouldFix: true });
+    checkTypesField({ ...context, mode: "fix" });
     await applyChanges();
 
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
+  });
+
+  test("reset", async () => {
+    const { context, report, applyChanges } = await prepare(
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "types": "./dist/index.d.ts",
+  "dependencies": {}
+}`,
+      {
+        entries: { ".": "./index.ts" },
+        targets: [{ name: "default", outDir: "dist" } as CompileTarget],
+      }
+    );
+
+    checkTypesField({ ...context, mode: "reset" });
+    await applyChanges();
+
+    expect(report).not.toBeCalled();
+    expect(report).not.toBeCalled();
+    expect(writePkgJson).toBeCalledWith(
+      "package.json",
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "types": "./dist/index.d.ts",
+  "dependencies": {}
+}`
+    );
   });
 
   test('no "." entry', async () => {
@@ -45,11 +75,11 @@ describe(checkTypesField, () => {
       }
     );
 
-    checkTypesField({ ...context, shouldFix: false });
+    checkTypesField({ ...context, mode: "check" });
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
 
-    checkTypesField({ ...context, shouldFix: true });
+    checkTypesField({ ...context, mode: "fix" });
     await applyChanges();
 
     expect(report).not.toBeCalled();
@@ -72,7 +102,7 @@ describe(checkTypesField, () => {
       }
     );
 
-    checkTypesField({ ...context, shouldFix: false });
+    checkTypesField({ ...context, mode: "check" });
     expect(report).toBeCalledWith({
       filename: "package.json",
       fixable: true,
@@ -83,7 +113,7 @@ describe(checkTypesField, () => {
 
     report.mockClear();
 
-    checkTypesField({ ...context, shouldFix: true });
+    checkTypesField({ ...context, mode: "fix" });
     await applyChanges();
 
     expect(report).not.toBeCalled();

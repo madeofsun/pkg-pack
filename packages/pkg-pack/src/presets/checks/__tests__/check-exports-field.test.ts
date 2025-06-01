@@ -66,11 +66,7 @@ describe(checkExports, () => {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./another": {
-      "some-addition": "qwe",
-      "types": "./dist/another.d.ts",
-      "default": "./dist/another.js"
-    }
+    "./some-addition": "qwe"    
   },
   "dependencies": {}
 }`,
@@ -82,19 +78,67 @@ describe(checkExports, () => {
 
     checkExports(esmPureExpectedExports(context.config))({
       ...context,
-      shouldFix: false,
+      mode: "check",
     });
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
 
     checkExports(esmPureExpectedExports(context.config))({
       ...context,
-      shouldFix: true,
+      mode: "fix",
     });
     await applyChanges();
 
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
+  });
+
+  test("reset", async () => {
+    const { context, report, applyChanges } = await prepare(
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./another": {
+      "some-addition": "qwe",
+      "types": "./dist/another.d.ts",
+      "default": "./dist/another.js"
+    },
+    "some-addition": "qwe"
+  },
+  "dependencies": {}
+}`,
+      {
+        entries: { ".": "./index.ts" },
+        targets: [{ name: "default", outDir: "dist" } as CompileTarget],
+      }
+    );
+
+    checkExports(esmPureExpectedExports(context.config))({
+      ...context,
+      mode: "reset",
+    });
+    await applyChanges();
+
+    expect(report).not.toBeCalled();
+    expect(writePkgJson).toBeCalledWith(
+      "package.json",
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {}
+}`
+    );
   });
 
   test.each([
@@ -115,7 +159,7 @@ describe(checkExports, () => {
 
     checkExports(esmPureExpectedExports(context.config))({
       ...context,
-      shouldFix: false,
+      mode: "check",
     });
     expect(report).toBeCalledWith({
       filename: "package.json",
@@ -138,7 +182,7 @@ describe(checkExports, () => {
 
     checkExports(esmPureExpectedExports(context.config))({
       ...context,
-      shouldFix: true,
+      mode: "fix",
     });
     await applyChanges();
 
@@ -187,7 +231,7 @@ describe(checkExports, () => {
 
     checkExports(esmPureExpectedExports(context.config))({
       ...context,
-      shouldFix: false,
+      mode: "check",
     });
     expect(report).toBeCalledWith({
       filename: "package.json",
@@ -204,7 +248,7 @@ describe(checkExports, () => {
 
     checkExports(esmPureExpectedExports(context.config))({
       ...context,
-      shouldFix: true,
+      mode: "fix",
     });
     await applyChanges();
 
@@ -252,7 +296,7 @@ describe(checkExports, () => {
 
     checkExports(esmPureExpectedExports(context.config))({
       ...context,
-      shouldFix: false,
+      mode: "check",
     });
     expect(report).toBeCalledWith({
       filename: "package.json",
@@ -266,7 +310,7 @@ describe(checkExports, () => {
 
     checkExports(esmPureExpectedExports(context.config))({
       ...context,
-      shouldFix: true,
+      mode: "fix",
     });
     await applyChanges();
 
@@ -308,7 +352,7 @@ describe(checkExports, () => {
 
     checkExports(esmPureExpectedExports(context.config))({
       ...context,
-      shouldFix: false,
+      mode: "check",
     });
     expect(report).toBeCalledWith({
       filename: "package.json",
@@ -322,7 +366,7 @@ describe(checkExports, () => {
 
     checkExports(esmPureExpectedExports(context.config))({
       ...context,
-      shouldFix: true,
+      mode: "fix",
     });
     await applyChanges();
 
@@ -367,7 +411,7 @@ describe(checkExports, () => {
 
     checkExports(cjsCompatExpectedExports(context.config))({
       ...context,
-      shouldFix: false,
+      mode: "check",
     });
     expect(report).toBeCalledTimes(2);
     expect(report).toBeCalledWith({
@@ -386,7 +430,7 @@ describe(checkExports, () => {
 
     checkExports(cjsCompatExpectedExports(context.config))({
       ...context,
-      shouldFix: true,
+      mode: "fix",
     });
     await applyChanges();
 
@@ -433,7 +477,7 @@ describe(checkExports, () => {
 
     checkExports(cjsCompatExpectedExports(context.config))({
       ...context,
-      shouldFix: false,
+      mode: "check",
     });
     expect(report).toBeCalledTimes(2);
     expect(report).toBeCalledWith({
@@ -447,7 +491,7 @@ describe(checkExports, () => {
 
     checkExports(cjsCompatExpectedExports(context.config))({
       ...context,
-      shouldFix: true,
+      mode: "fix",
     });
     await applyChanges();
 

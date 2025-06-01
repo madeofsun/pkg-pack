@@ -27,15 +27,59 @@ describe(checkTypesVersionsField, () => {
       }
     );
 
-    checkTypesVersionsField({ ...context, shouldFix: false });
+    checkTypesVersionsField({ ...context, mode: "check" });
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
 
-    checkTypesVersionsField({ ...context, shouldFix: true });
+    checkTypesVersionsField({ ...context, mode: "fix" });
     await applyChanges();
 
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
+  });
+
+  test("reset", async () => {
+    const { context, report, applyChanges } = await prepare(
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "typesVersions": {
+    "*": {
+      "another": ["dist/another.d.ts"],
+      ".": ["dist/index.d.ts"]
+    },
+    "abc": "abc"
+  },
+  "dependencies": {}
+}`,
+      {
+        entries: { ".": "./index.ts", another: "./another.ts" },
+        targets: [{ name: "default", outDir: "dist" } as CompileTarget],
+      }
+    );
+
+    checkTypesVersionsField({ ...context, mode: "reset" });
+    await applyChanges();
+
+    expect(report).not.toBeCalled();
+    expect(writePkgJson).toBeCalledWith(
+      "package.json",
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "typesVersions": {
+    "*": {
+      ".": [
+        "dist/index.d.ts"
+      ],
+      "another": [
+        "dist/another.d.ts"
+      ]
+    }
+  },
+  "dependencies": {}
+}`
+    );
   });
 
   test.each([
@@ -54,7 +98,7 @@ describe(checkTypesVersionsField, () => {
       }
     );
 
-    checkTypesVersionsField({ ...context, shouldFix: false });
+    checkTypesVersionsField({ ...context, mode: "check" });
     expect(report).toBeCalledWith({
       filename: "package.json",
       fixable: true,
@@ -75,7 +119,7 @@ describe(checkTypesVersionsField, () => {
 
     report.mockClear();
 
-    checkTypesVersionsField({ ...context, shouldFix: true });
+    checkTypesVersionsField({ ...context, mode: "fix" });
     await applyChanges();
 
     expect(report).not.toBeCalled();
@@ -118,7 +162,7 @@ describe(checkTypesVersionsField, () => {
       }
     );
 
-    checkTypesVersionsField({ ...context, shouldFix: false });
+    checkTypesVersionsField({ ...context, mode: "check" });
     expect(report).toBeCalledWith({
       filename: "package.json",
       fixable: true,
@@ -139,7 +183,7 @@ describe(checkTypesVersionsField, () => {
 
     report.mockClear();
 
-    checkTypesVersionsField({ ...context, shouldFix: true });
+    checkTypesVersionsField({ ...context, mode: "fix" });
     await applyChanges();
 
     expect(report).not.toBeCalled();
@@ -186,7 +230,7 @@ describe(checkTypesVersionsField, () => {
       }
     );
 
-    checkTypesVersionsField({ ...context, shouldFix: false });
+    checkTypesVersionsField({ ...context, mode: "check" });
     expect(report).toBeCalledWith({
       filename: "package.json",
       fixable: true,
@@ -197,7 +241,7 @@ describe(checkTypesVersionsField, () => {
 
     report.mockClear();
 
-    checkTypesVersionsField({ ...context, shouldFix: true });
+    checkTypesVersionsField({ ...context, mode: "fix" });
     await applyChanges();
 
     expect(report).not.toBeCalled();

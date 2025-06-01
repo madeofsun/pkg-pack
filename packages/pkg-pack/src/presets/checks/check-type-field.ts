@@ -5,12 +5,20 @@ export function checkTypeField(expectedValue: "commonjs" | "module") {
   return function checkTypeField({
     report,
     pkg,
-    shouldFix,
+    mode,
     updatePkg,
   }: CheckContext) {
+    const reset = () =>
+      updatePkg(setOrAppendOp(pkg, [], "type", expectedValue, FIELD_ORDER));
+
+    if (mode === "reset") {
+      reset();
+      return;
+    }
+
     if (pkg.type !== expectedValue) {
-      if (shouldFix) {
-        updatePkg(setOrAppendOp(pkg, [], "type", expectedValue, FIELD_ORDER));
+      if (mode === "fix") {
+        reset();
       } else {
         report({
           filename: PKG_FILE,

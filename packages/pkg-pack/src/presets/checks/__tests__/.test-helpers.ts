@@ -38,7 +38,7 @@ const prepare = async (
     ...(await prepareCheckContext({
       config: config as ResolvedConfig,
       report,
-      shouldFix: true,
+      mode: "check",
     })),
   };
 };

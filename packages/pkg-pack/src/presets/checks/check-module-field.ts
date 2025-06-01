@@ -4,7 +4,7 @@ import { getTarget, resolveEntryFile, setOrAppendOp } from "./helpers";
 export function checkModuleField({
   config,
   report,
-  shouldFix,
+  mode,
   pkg,
   updatePkg,
 }: CheckContext) {
@@ -18,9 +18,17 @@ export function checkModuleField({
     "js"
   );
 
+  const reset = () =>
+    updatePkg(setOrAppendOp(pkg, [], "module", expectedJs, FIELD_ORDER));
+
+  if (mode === "reset") {
+    reset();
+    return;
+  }
+
   if (pkg.module !== expectedJs) {
-    if (shouldFix) {
-      updatePkg(setOrAppendOp(pkg, [], "module", expectedJs, FIELD_ORDER));
+    if (mode === "fix") {
+      reset();
     } else {
       report({
         filename: PKG_FILE,

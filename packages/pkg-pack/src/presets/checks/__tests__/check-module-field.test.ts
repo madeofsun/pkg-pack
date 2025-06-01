@@ -21,15 +21,44 @@ describe(checkModuleField, () => {
       }
     );
 
-    checkModuleField({ ...context, shouldFix: false });
+    checkModuleField({ ...context, mode: "check" });
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
 
-    checkModuleField({ ...context, shouldFix: true });
+    checkModuleField({ ...context, mode: "fix" });
     await applyChanges();
 
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
+  });
+
+  test("reset", async () => {
+    const { context, report, applyChanges } = await prepare(
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "module": "./module/index.js",
+  "dependencies": {}
+}`,
+      {
+        entries: { ".": "./index.ts" },
+        targets: [{ name: "module", outDir: "module" } as CompileTarget],
+      }
+    );
+
+    checkModuleField({ ...context, mode: "reset" });
+    await applyChanges();
+
+    expect(report).not.toBeCalled();
+    expect(writePkgJson).toBeCalledWith(
+      "package.json",
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "module": "./module/index.js",
+  "dependencies": {}
+}`
+    );
   });
 
   test('no "." entry', async () => {
@@ -45,11 +74,11 @@ describe(checkModuleField, () => {
       }
     );
 
-    checkModuleField({ ...context, shouldFix: false });
+    checkModuleField({ ...context, mode: "check" });
     expect(report).not.toBeCalled();
     expect(writePkgJson).not.toBeCalled();
 
-    checkModuleField({ ...context, shouldFix: true });
+    checkModuleField({ ...context, mode: "fix" });
     await applyChanges();
 
     expect(report).not.toBeCalled();
@@ -72,7 +101,7 @@ describe(checkModuleField, () => {
       }
     );
 
-    checkModuleField({ ...context, shouldFix: false });
+    checkModuleField({ ...context, mode: "check" });
     expect(report).toBeCalledWith({
       filename: "package.json",
       fixable: true,
@@ -82,7 +111,7 @@ describe(checkModuleField, () => {
 
     report.mockClear();
 
-    checkModuleField({ ...context, shouldFix: true });
+    checkModuleField({ ...context, mode: "fix" });
     await applyChanges();
 
     expect(report).not.toBeCalled();

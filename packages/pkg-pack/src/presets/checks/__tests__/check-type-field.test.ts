@@ -17,7 +17,7 @@ describe(checkTypeField, () => {
   "dependencies": {}
 }`);
 
-      checkTypeFiledModule({ ...context, shouldFix: false });
+      checkTypeFiledModule({ ...context, mode: "check" });
       expect(report).toBeCalledWith({
         filename: "package.json",
         fixable: true,
@@ -28,7 +28,7 @@ describe(checkTypeField, () => {
 
       report.mockClear();
 
-      checkTypeFiledModule({ ...context, shouldFix: true });
+      checkTypeFiledModule({ ...context, mode: "fix" });
       await applyChanges();
 
       expect(report).not.toBeCalled();
@@ -51,11 +51,11 @@ describe(checkTypeField, () => {
   "dependencies": {}
 }`);
 
-      checkTypeFiledModule({ ...context, shouldFix: false });
+      checkTypeFiledModule({ ...context, mode: "check" });
       expect(report).not.toBeCalled();
       expect(writePkgJson).not.toBeCalled();
 
-      checkTypeFiledModule({ ...context, shouldFix: true });
+      checkTypeFiledModule({ ...context, mode: "fix" });
       await applyChanges();
       expect(report).not.toBeCalled();
       expect(writePkgJson).not.toBeCalled();
@@ -70,7 +70,7 @@ describe(checkTypeField, () => {
   "dependencies": {}
 }`);
 
-      checkTypeFiledModule({ ...context, shouldFix: false });
+      checkTypeFiledModule({ ...context, mode: "check" });
       expect(report).toBeCalledWith({
         filename: "package.json",
         fixable: true,
@@ -81,7 +81,7 @@ describe(checkTypeField, () => {
 
       report.mockClear();
 
-      checkTypeFiledModule({ ...context, shouldFix: true });
+      checkTypeFiledModule({ ...context, mode: "fix" });
       await applyChanges();
 
       expect(report).not.toBeCalled();
@@ -102,7 +102,7 @@ describe(checkTypeField, () => {
   "dependencies": {}
 }`);
 
-      checkTypeFiledModule({ ...context, shouldFix: false });
+      checkTypeFiledModule({ ...context, mode: "check" });
       expect(report).toBeCalledWith({
         filename: "package.json",
         fixable: true,
@@ -113,7 +113,7 @@ describe(checkTypeField, () => {
 
       report.mockClear();
 
-      checkTypeFiledModule({ ...context, shouldFix: true });
+      checkTypeFiledModule({ ...context, mode: "fix" });
       await applyChanges();
 
       expect(report).not.toBeCalled();
@@ -126,5 +126,28 @@ describe(checkTypeField, () => {
 }`
       );
     });
+  });
+
+  test("reset", async () => {
+    const { context, report, applyChanges } = await prepare(`{
+  "name": "some",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {}
+}`);
+
+    checkTypeFiledModule({ ...context, mode: "reset" });
+    await applyChanges();
+    expect(report).not.toBeCalled();
+
+    expect(writePkgJson).toBeCalledWith(
+      "package.json",
+      `{
+  "name": "some",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {}
+}`
+    );
   });
 });

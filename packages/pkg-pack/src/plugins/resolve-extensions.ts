@@ -5,11 +5,11 @@ import { findModuleRefs } from "../helpers/ast.js";
 import { editText, type TextChange } from "../helpers/edit-text.js";
 import type ts from "typescript";
 
-export function rewriteExtensionsPlugin(): Plugin {
+export function resolveExtensionsPlugin(): Plugin {
   let logger!: Logger;
   return {
     logger: (_logger) => (logger = _logger),
-    name: "pkg-pack:rewrite-extensions",
+    name: "pkg-pack:resolve-extensions",
     beforeEmit: {
       fn({ languageService, updateFiles, hasFile, srcDir }) {
         const program = languageService.getProgram()!;

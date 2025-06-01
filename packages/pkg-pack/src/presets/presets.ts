@@ -5,7 +5,7 @@ import { fixImportMetaPlugin } from "../plugins/fix-import-meta.js";
 import { loadJsonPlugin } from "../plugins/load-json.js";
 import { loadRawPlugin } from "../plugins/load-raw.js";
 import { loadScriptPlugin } from "../plugins/load-script.js";
-import { rewriteExtensionsPlugin } from "../plugins/rewrite-extensions.js";
+import { resolveExtensionsPlugin } from "../plugins/resolve-extensions.js";
 import type { ModuleFormat, Plugin, Preset } from "../types";
 import { checkCjsCompat, checkEsmPure } from "./checks";
 
@@ -46,7 +46,7 @@ export function cjsCompatPreset(): Preset {
 
 const extraPlugins = [
   // add extension
-  setHookOrder(rewriteExtensionsPlugin(), { beforeEmit: -100 }),
+  setHookOrder(resolveExtensionsPlugin(), { beforeEmit: -100 }),
   // ensure that import.meta will work
   setHookOrder(fixImportMetaPlugin(), { beforeEmit: -100 }),
 

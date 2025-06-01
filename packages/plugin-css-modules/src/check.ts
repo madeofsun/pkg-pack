@@ -44,24 +44,33 @@ export async function prepareCheckContext(options: CheckHookOptions): Promise<{
 
 export function checkImports({
   pkg,
-  shouldFix,
+  mode,
   updatePkg,
   report,
   config,
 }: CheckContext) {
   const expectedImports = getExpectedImports(config);
 
+  const reset = () => {
+    updatePkg(
+      setOrAppendOp(
+        pkg,
+        [],
+        "imports",
+        expectedImports,
+        "files" in pkg ? "files" : undefined
+      )
+    );
+  };
+
+  if (mode === "reset") {
+    reset();
+    return;
+  }
+
   if (!isRecord(pkg.imports)) {
-    if (shouldFix) {
-      updatePkg(
-        setOrAppendOp(
-          pkg,
-          [],
-          "imports",
-          expectedImports,
-          "files" in pkg ? "files" : undefined
-        )
-      );
+    if (mode === "fix") {
+      reset();
     } else {
       report({
         filename: PKG_FILE,
@@ -78,7 +87,7 @@ export function checkImports({
     const currentValue = pkg.imports[itemName];
 
     const handle = () => {
-      if (shouldFix) {
+      if (mode === "fix") {
         updatePkg(setOrAppendOp(pkg, ["imports"], itemName, expectedValue));
       } else {
         report({

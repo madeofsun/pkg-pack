@@ -11,7 +11,7 @@ import {
 export function checkTypesVersionsField({
   config,
   report,
-  shouldFix,
+  mode,
   pkg,
   updatePkg,
 }: CheckContext) {
@@ -28,18 +28,26 @@ export function checkTypesVersionsField({
     expectedTypesVersions["*"][pathKey] = pathValue;
   }
 
+  const reset = () =>
+    updatePkg(
+      setOrAppendOp(
+        pkg,
+        [],
+        "typesVersions",
+        expectedTypesVersions,
+        FIELD_ORDER
+      )
+    );
+
+  if (mode === "reset") {
+    reset();
+    return;
+  }
+
   if (!isRecord(pkg.typesVersions) || !isRecord(pkg.typesVersions["*"])) {
-    if (shouldFix) {
+    if (mode === "fix") {
       if (!isRecord(pkg.typesVersions)) {
-        updatePkg(
-          setOrAppendOp(
-            pkg,
-            [],
-            "typesVersions",
-            expectedTypesVersions,
-            FIELD_ORDER
-          )
-        );
+        reset();
       } else {
         updatePkg(
           setOrPrependOp(
@@ -66,7 +74,7 @@ export function checkTypesVersionsField({
   )) {
     const currentValue = pkg.typesVersions["*"][entryName];
     if (!Array.isArray(currentValue) || currentValue[0] !== value) {
-      if (shouldFix) {
+      if (mode === "fix") {
         updatePkg(
           setOrAppendOp(pkg, ["typesVersions", "*"], entryName, [value])
         );

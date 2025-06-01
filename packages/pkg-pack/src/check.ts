@@ -11,7 +11,7 @@ import type {
 
 export async function check(
   config: UserConfig,
-  shouldFix: boolean,
+  mode: "check" | "fix" | "reset",
   onCheckError: (error: unknown) => void
 ): Promise<Issue[]> {
   const resolvedConfig = await resolveConfig(config);
@@ -26,7 +26,7 @@ export async function check(
   await checkHook({
     config: resolvedConfig,
     report,
-    shouldFix,
+    mode,
   });
 
   return issues;

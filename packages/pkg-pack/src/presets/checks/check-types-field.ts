@@ -4,7 +4,7 @@ import { getTarget, resolveEntryFile, setOrAppendOp } from "./helpers";
 export function checkTypesField({
   config,
   report,
-  shouldFix,
+  mode,
   pkg,
   updatePkg,
 }: CheckContext) {
@@ -21,9 +21,17 @@ export function checkTypesField({
     "dts"
   );
 
+  const reset = () =>
+    updatePkg(setOrAppendOp(pkg, [], "types", expectedDts, FIELD_ORDER));
+
+  if (mode === "reset") {
+    reset();
+    return;
+  }
+
   if (pkg.types !== expectedDts) {
-    if (shouldFix) {
-      updatePkg(setOrAppendOp(pkg, [], "types", expectedDts, FIELD_ORDER));
+    if (mode === "fix") {
+      reset();
     } else {
       report({
         filename: PKG_FILE,

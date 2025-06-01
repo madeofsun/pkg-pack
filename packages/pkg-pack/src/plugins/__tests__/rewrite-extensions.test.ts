@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { processFile } from "../rewrite-extensions";
+import { processFile } from "../resolve-extensions";
 import { createLogger } from "../../__tests__/create-logger";
 import { createProgram } from "../../__tests__/create-program";
 import path from "path";
@@ -39,7 +39,7 @@ const withParams = (
   };
 };
 
-describe("rewrite-extensions", () => {
+describe("resolve-extensions", () => {
   test("empty", withParams("src/index.ts", "", [], undefined));
 
   test(

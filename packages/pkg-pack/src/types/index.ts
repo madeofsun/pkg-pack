@@ -242,9 +242,9 @@ export type AfterEmitHookOptions = BuildHookOptions & {
 export type AfterEmitHook = (options: AfterEmitHookOptions) => OrPromise<void>;
 
 export type CheckHookOptions = {
+  mode: "check" | "fix" | "reset";
   config: ResolvedConfig;
   report: (issue: Issue) => void;
-  shouldFix: boolean;
 };
 
 export type Issue = {

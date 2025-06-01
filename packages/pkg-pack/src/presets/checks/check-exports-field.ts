@@ -63,12 +63,20 @@ export function cjsCompatExpectedExports(config: ResolvedConfig) {
 export function checkExports(
   expectedExports: Record<string, Record<string, string>>
 ) {
-  return ({ pkg, report, shouldFix, updatePkg }: CheckContext) => {
+  return ({ pkg, report, mode, updatePkg }: CheckContext) => {
+    const reset = () =>
+      updatePkg(
+        setOrAppendOp(pkg, [], "exports", expectedExports, FIELD_ORDER)
+      );
+
+    if (mode === "reset") {
+      reset();
+      return;
+    }
+
     if (!isRecord(pkg.exports)) {
-      if (shouldFix) {
-        updatePkg(
-          setOrAppendOp(pkg, [], "exports", expectedExports, FIELD_ORDER)
-        );
+      if (mode === "fix") {
+        reset();
       } else {
         const printed = JSON.stringify(expectedExports, undefined, 2);
         report({
@@ -83,7 +91,7 @@ export function checkExports(
     for (const [entryName, expectedValue] of Object.entries(expectedExports)) {
       const currentValue = pkg.exports[entryName];
       if (!isRecord(currentValue)) {
-        if (shouldFix) {
+        if (mode === "fix") {
           updatePkg(setOrAppendOp(pkg, ["exports"], entryName, expectedValue));
         } else {
           const printed = JSON.stringify(expectedValue, undefined, 2);
@@ -101,7 +109,7 @@ export function checkExports(
         if (
           allCurrentConditions[allCurrentConditions.length - 1] !== "default"
         ) {
-          if (shouldFix) {
+          if (mode === "fix") {
             shouldUpdateValue = true;
           } else {
             report({
@@ -114,7 +122,7 @@ export function checkExports(
       }
       for (const [condition, filePath] of Object.entries(expectedValue)) {
         if (currentValue[condition] !== filePath) {
-          if (shouldFix) {
+          if (mode === "fix") {
             shouldUpdateValue = true;
           } else {
             report({

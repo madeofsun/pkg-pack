@@ -4,7 +4,7 @@ import { getTarget, resolveEntryFile, setOrAppendOp } from "./helpers";
 export function checkMainField({
   config,
   report,
-  shouldFix,
+  mode,
   pkg,
   updatePkg,
 }: CheckContext) {
@@ -18,9 +18,17 @@ export function checkMainField({
     "js"
   );
 
+  const reset = () =>
+    updatePkg(setOrAppendOp(pkg, [], "main", expectedJs, FIELD_ORDER));
+
+  if (mode === "reset") {
+    reset();
+    return;
+  }
+
   if (pkg.main !== expectedJs) {
-    if (shouldFix) {
-      updatePkg(setOrAppendOp(pkg, [], "main", expectedJs, FIELD_ORDER));
+    if (mode === "fix") {
+      reset();
     } else {
       report({
         filename: PKG_FILE,
