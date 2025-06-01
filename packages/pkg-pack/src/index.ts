@@ -2,9 +2,8 @@ export * from "./types/index.js";
 
 export { build } from "./build.js";
 export { defineConfig } from "./define-config.js";
-export { getTsErrors } from "./get-ts-errors.js";
 export { loadConfig } from "./load-config.js";
-export { output } from "./output.js";
+export { getTsErrors, output } from "./output.js";
 export { resolveConfig } from "./resolve-config.js";
 
 export * from "./plugins/index.js";

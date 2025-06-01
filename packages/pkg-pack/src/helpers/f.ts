@@ -4,6 +4,7 @@ export const f = {
   red: createFormatter("\x1b[31m", "\x1b[39m"),
   yellow: createFormatter("\x1b[33m", "\x1b[39m"),
   cyan: createFormatter("\x1b[36m", "\x1b[39m"),
+  magenta: createFormatter("\x1b[35m", "\x1b[39m"),
   gray: createFormatter("\x1b[90m", "\x1b[39m"),
 };
 

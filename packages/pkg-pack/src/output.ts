@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { BuildResult } from "./types";
+import ts from "typescript";
 
 export async function output(result: BuildResult) {
   await fs.promises.rm(path.resolve(result.target.outDir), {
@@ -28,4 +29,12 @@ export async function output(result: BuildResult) {
   }
 
   await Promise.all(promises);
+}
+
+export function getTsErrors(result: BuildResult) {
+  return ts.formatDiagnosticsWithColorAndContext(result.diagnostics, {
+    getCurrentDirectory: ts.sys.getCurrentDirectory,
+    getNewLine: () => ts.sys.newLine,
+    getCanonicalFileName: (fileName) => fileName,
+  });
 }

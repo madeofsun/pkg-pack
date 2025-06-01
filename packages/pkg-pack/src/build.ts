@@ -18,7 +18,16 @@ import type {
   ResolvedConfig,
 } from "./types/index.js";
 
-export async function build(config: UserConfig): Promise<BuildResult[]> {
+export async function build(
+  config: UserConfig,
+  {
+    onBuildStart,
+    onBuildEnd,
+  }: {
+    onBuildStart: (target: CompileTarget) => Promise<void> | void;
+    onBuildEnd: (result: BuildResult) => Promise<void> | void;
+  }
+): Promise<void> {
   const resolvedConfig = await resolveConfig(config);
 
   const inputFiles = resolvedConfig.fileNames.map((fileName) => {
@@ -29,21 +38,19 @@ export async function build(config: UserConfig): Promise<BuildResult[]> {
     };
   });
 
-  const results: BuildResult[] = [];
   for (const target of resolvedConfig.targets) {
+    await onBuildStart(target);
     const { files, diagnostics } = await buildTarget(
       resolvedConfig,
       inputFiles,
       target
     );
-    results.push({
+    await onBuildEnd({
       target,
       files,
       diagnostics,
     });
   }
-
-  return results;
 }
 
 async function buildTarget(
