@@ -86,12 +86,10 @@ export async function compile(
   };
 
   const compilerOptions = {
-    // noEmitOnError: false,
     ...structuredClone(target.compilerOptions),
     noEmit: false,
     incremental: true,
     noEmitOnError: false,
-    // sourceMap: true,
   };
 
   const _tsHost = ts.createCompilerHost(compilerOptions);
@@ -122,21 +120,15 @@ export async function compile(
     },
     realpath: ts.sys.realpath,
     getCurrentDirectory: ts.sys.getCurrentDirectory,
-    // TODO: check and fix
     directoryExists: (directoryName) => {
       if (directoryName.startsWith(srcDir)) {
         return true;
-        return files
-          .getFileNames()
-          .some((name) => name.startsWith(directoryName));
       }
       return ts.sys.directoryExists(directoryName);
     },
-    // TODO: check and fix
     getDirectories: (directoryName) => {
       return ts.sys.getDirectories(directoryName);
     },
-    // TODO: check and fix
     readDirectory: (path, extensions, exclude, include, depth) => {
       return ts.sys.readDirectory(path, extensions, exclude, include, depth);
     },
