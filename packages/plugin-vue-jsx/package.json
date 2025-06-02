@@ -25,10 +25,10 @@
     "@vue/babel-plugin-jsx": "^1.0.0"
   },
   "peerDependencies": {
-    "pkg-pack": "^0.0.0 || ^1.0.0"
+    "pkg-pack": "workspace:~"
   },
   "devDependencies": {
     "@types/babel__core": "^7.20.5",
-    "pkg-pack": "workspace:^"
+    "pkg-pack": "workspace:~"
   }
 }

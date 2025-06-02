@@ -26,5 +26,5 @@
     "build": "turbo run build --filter=\"./packages/*\"",
     "build:examples": "turbo run build --filter=\"./examples/*\""
   },
-  "packageManager": "pnpm@10.11.0"
+  "packageManager": "pnpm@10.11.1"
 }

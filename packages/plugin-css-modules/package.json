@@ -1,6 +1,6 @@
 {
   "name": "@pkg-pack/plugin-css-modules",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "CSS Modules plugin for pkg-pack",
   "type": "module",
   "files": [
@@ -34,9 +34,9 @@
     "lightningcss": "^1.28.2"
   },
   "peerDependencies": {
-    "pkg-pack": "^0.0.0 || ^1.0.0"
+    "pkg-pack": "workspace:~"
   },
   "devDependencies": {
-    "pkg-pack": "workspace:^"
+    "pkg-pack": "workspace:~"
   }
 }

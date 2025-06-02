@@ -174,7 +174,7 @@ importers:
         version: 1.29.1
     devDependencies:
       pkg-pack:
-        specifier: workspace:^
+        specifier: workspace:~
         version: link:../pkg-pack
 
   packages/plugin-vue-jsx:
@@ -193,7 +193,7 @@ importers:
         specifier: ^7.20.5
         version: 7.20.5
       pkg-pack:
-        specifier: workspace:^
+        specifier: workspace:~
         version: link:../pkg-pack
 
 packages:
